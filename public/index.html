@@ -49,7 +49,7 @@
       font-weight: 500;
     }
 
-    select, input[type="color"] {
+    select, input[type="color"], input[type="number"] {
       padding: 8px 12px;
       background: #3c3c3c;
       border: 1px solid #555;
@@ -212,6 +212,22 @@
         <label for="speedSlider">Speed:</label>
         <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
         <span id="speedValue">1.0x</span>
+      </div>
+
+      <div class="control-group">
+        <label for="sizeParam">Size:</label>
+        <input type="number" id="sizeParam" value="50" min="1" max="500">
+      </div>
+
+      <div class="control-group" id="lineParams" style="display: none;">
+        <label for="lineLength">Length:</label>
+        <input type="number" id="lineLength" value="100" min="1" max="500">
+
+        <label for="lineAngle">Angle:</label>
+        <input type="number" id="lineAngle" value="0" min="0" max="360">
+
+        <label for="lineWidth">Width:</label>
+        <input type="number" id="lineWidth" value="3" min="1" max="50">
       </div>
 
       <button id="renderBtn">Render PNG</button>

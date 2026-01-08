@@ -15,7 +15,7 @@ export function drawRectangle(
   color: string
 ): void {
   ctx.fillStyle = color;
-  ctx.fillRect(x, y, width, height);
+  ctx.fillRect(x - width / 2, y - height / 2, width, height);
 }
 
 export function drawCircle(
@@ -107,7 +107,7 @@ export function drawShape(ctx: CanvasRenderingContext2D, shape: ShapeParams): vo
       drawTriangle(ctx, shape.x, shape.y, shape.size, shape.color);
       break;
     case 'line':
-      drawLine(ctx, shape.x, shape.y, shape.x2, shape.y2, shape.color, shape.width);
+      drawLine(ctx, shape.x, shape.y, shape.x2, shape.y2, shape.color, shape.lineWidth || shape.width || 3);
       break;
     case 'star':
       drawStar(ctx, shape.x, shape.y, shape.radius, shape.color);

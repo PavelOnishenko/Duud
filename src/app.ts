@@ -67,6 +67,19 @@ class DuudApp {
       speedValue.textContent = `${speed.toFixed(1)}x`;
     });
 
+    canvas.addEventListener('mousemove', (e) => {
+      this.handleCanvasMouseMove(e);
+    });
+
+    canvas.addEventListener('mouseenter', () => {
+      this.showPreview = true;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      this.showPreview = false;
+      this.canvasManager.redraw();
+    });
+
     renderBtn.addEventListener('click', () => {
       this.renderPNG();
     });
