@@ -26,7 +26,9 @@ export class CodeGenerator {
   private generateShapeCode(shape: ShapeParams): string {
     switch (shape.type) {
       case 'rectangle':
-        return `ctx.fillStyle = '${shape.color}';\nctx.fillRect(${shape.x}, ${shape.y}, ${shape.width}, ${shape.height});`;
+        const rectX = shape.x - shape.width / 2;
+        const rectY = shape.y - shape.height / 2;
+        return `ctx.fillStyle = '${shape.color}';\nctx.fillRect(${rectX}, ${rectY}, ${shape.width}, ${shape.height});`;
 
       case 'circle':
         return `ctx.fillStyle = '${shape.color}';\nctx.beginPath();\nctx.arc(${shape.x}, ${shape.y}, ${shape.radius}, 0, Math.PI * 2);\nctx.fill();`;
@@ -35,7 +37,8 @@ export class CodeGenerator {
         return `ctx.fillStyle = '${shape.color}';\nctx.beginPath();\nctx.moveTo(${shape.x}, ${shape.y - shape.size});\nctx.lineTo(${shape.x - shape.size}, ${shape.y + shape.size});\nctx.lineTo(${shape.x + shape.size}, ${shape.y + shape.size});\nctx.closePath();\nctx.fill();`;
 
       case 'line':
-        return `ctx.strokeStyle = '${shape.color}';\nctx.lineWidth = ${shape.width};\nctx.beginPath();\nctx.moveTo(${shape.x}, ${shape.y});\nctx.lineTo(${shape.x2}, ${shape.y2});\nctx.stroke();`;
+        const lineWidth = shape.lineWidth || shape.width || 3;
+        return `ctx.strokeStyle = '${shape.color}';\nctx.lineWidth = ${lineWidth};\nctx.beginPath();\nctx.moveTo(${shape.x}, ${shape.y});\nctx.lineTo(${shape.x2}, ${shape.y2});\nctx.stroke();`;
 
       case 'star':
         const starCode = `ctx.fillStyle = '${shape.color}';\nctx.beginPath();\n`;

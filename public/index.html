@@ -49,7 +49,7 @@
       font-weight: 500;
     }
 
-    select, input[type="color"] {
+    select, input[type="color"], input[type="number"] {
       padding: 8px 12px;
       background: #3c3c3c;
       border: 1px solid #555;
@@ -67,6 +67,10 @@
       width: 50px;
       height: 40px;
       padding: 2px;
+    }
+
+    input[type="number"] {
+      width: 80px;
     }
 
     button {
@@ -167,12 +171,29 @@
           <option value="rectangle">Rectangle</option>
           <option value="triangle">Triangle</option>
           <option value="star">Star</option>
+          <option value="line">Line</option>
         </select>
       </div>
 
       <div class="control-group">
         <label for="colorPicker">Color:</label>
         <input type="color" id="colorPicker" value="#4ec9b0">
+      </div>
+
+      <div class="control-group">
+        <label for="sizeParam">Size:</label>
+        <input type="number" id="sizeParam" value="50" min="1" max="500">
+      </div>
+
+      <div class="control-group" id="lineParams" style="display: none;">
+        <label for="lineLength">Length:</label>
+        <input type="number" id="lineLength" value="100" min="1" max="500">
+
+        <label for="lineAngle">Angle:</label>
+        <input type="number" id="lineAngle" value="0" min="0" max="360">
+
+        <label for="lineWidth">Width:</label>
+        <input type="number" id="lineWidth" value="3" min="1" max="50">
       </div>
 
       <button id="renderBtn">Render PNG</button>
