@@ -182,6 +182,113 @@
       color: #858585;
     }
 
+    .pose-controls {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 600px;
+    }
+
+    .control-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #1e1e1e;
+      border-radius: 4px;
+      border: 1px solid #3c3c3c;
+    }
+
+    .control-section h3 {
+      color: #569cd6;
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slider-control {
+      display: grid;
+      grid-template-columns: 120px 1fr 60px;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .slider-control label {
+      font-size: 13px;
+      color: #d4d4d4;
+    }
+
+    .slider-control input[type="range"] {
+      width: 100%;
+    }
+
+    .value-display {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      color: #4ec9b0;
+      text-align: right;
+    }
+
+    .animation-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .animation-controls input[type="text"] {
+      flex: 1;
+      min-width: 120px;
+      padding: 8px;
+      background: #3c3c3c;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #d4d4d4;
+      font-size: 13px;
+    }
+
+    .animation-controls button {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .keyframe-list {
+      background: #2d2d30;
+      border-radius: 4px;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .keyframe-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      background: #1e1e1e;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    .keyframe-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .keyframe-item .time {
+      color: #4ec9b0;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    .keyframe-item button {
+      padding: 4px 10px;
+      font-size: 11px;
+      background: #d13438;
+    }
+
+    .keyframe-item button:hover {
+      background: #e04447;
+    }
+
     @media (max-width: 1200px) {
       .main-content {
         grid-template-columns: 1fr;
@@ -193,6 +300,7 @@
   <div class="container">
     <h1>🎬 Duud - Stick Figure Animation Studio</h1>
 
+    <!-- Playback Controls -->
     <div class="controls">
       <div class="control-group">
         <label for="animationType">Animation:</label>
@@ -214,23 +322,7 @@
         <span id="speedValue">1.0x</span>
       </div>
 
-      <div class="control-group">
-        <label for="sizeParam">Size:</label>
-        <input type="number" id="sizeParam" value="50" min="1" max="500">
-      </div>
-
-      <div class="control-group" id="lineParams" style="display: none;">
-        <label for="lineLength">Length:</label>
-        <input type="number" id="lineLength" value="100" min="1" max="500">
-
-        <label for="lineAngle">Angle:</label>
-        <input type="number" id="lineAngle" value="0" min="0" max="360">
-
-        <label for="lineWidth">Width:</label>
-        <input type="number" id="lineWidth" value="3" min="1" max="50">
-      </div>
-
-      <button id="renderBtn">Render PNG</button>
+      <button id="renderBtn">Render Sprite Sheet</button>
     </div>
 
     <div class="main-content">
@@ -241,11 +333,99 @@
         </div>
       </div>
 
+      <!-- Pose Editor Panel -->
       <div class="code-container">
-        <h2>Generated TypeScript Code</h2>
-        <div id="codeDisplay" class="code-display">// No shapes placed yet</div>
+        <h2>Pose Editor</h2>
+        <div class="pose-controls">
+          <!-- Head & Torso -->
+          <div class="control-section">
+            <h3>Head & Torso</h3>
+            <div class="slider-control">
+              <label for="headTilt">Head Tilt:</label>
+              <input type="range" id="headTilt" min="-1.57" max="1.57" step="0.01" value="0">
+              <span class="value-display" id="headTiltValue">0.00</span>
+            </div>
+            <div class="slider-control">
+              <label for="torsoAngle">Torso Angle:</label>
+              <input type="range" id="torsoAngle" min="-1.57" max="1.57" step="0.01" value="0">
+              <span class="value-display" id="torsoAngleValue">0.00</span>
+            </div>
+          </div>
+
+          <!-- Left Arm -->
+          <div class="control-section">
+            <h3>Left Arm</h3>
+            <div class="slider-control">
+              <label for="leftShoulder">Shoulder:</label>
+              <input type="range" id="leftShoulder" min="-3.14" max="3.14" step="0.01" value="0.785">
+              <span class="value-display" id="leftShoulderValue">0.79</span>
+            </div>
+            <div class="slider-control">
+              <label for="leftElbow">Elbow:</label>
+              <input type="range" id="leftElbow" min="-3.14" max="3.14" step="0.01" value="0.524">
+              <span class="value-display" id="leftElbowValue">0.52</span>
+            </div>
+          </div>
+
+          <!-- Right Arm -->
+          <div class="control-section">
+            <h3>Right Arm</h3>
+            <div class="slider-control">
+              <label for="rightShoulder">Shoulder:</label>
+              <input type="range" id="rightShoulder" min="-3.14" max="3.14" step="0.01" value="-0.785">
+              <span class="value-display" id="rightShoulderValue">-0.79</span>
+            </div>
+            <div class="slider-control">
+              <label for="rightElbow">Elbow:</label>
+              <input type="range" id="rightElbow" min="-3.14" max="3.14" step="0.01" value="-0.524">
+              <span class="value-display" id="rightElbowValue">-0.52</span>
+            </div>
+          </div>
+
+          <!-- Left Leg -->
+          <div class="control-section">
+            <h3>Left Leg</h3>
+            <div class="slider-control">
+              <label for="leftHip">Hip:</label>
+              <input type="range" id="leftHip" min="-1.57" max="1.57" step="0.01" value="0.393">
+              <span class="value-display" id="leftHipValue">0.39</span>
+            </div>
+            <div class="slider-control">
+              <label for="leftKnee">Knee:</label>
+              <input type="range" id="leftKnee" min="-1.57" max="1.57" step="0.01" value="0.262">
+              <span class="value-display" id="leftKneeValue">0.26</span>
+            </div>
+          </div>
+
+          <!-- Right Leg -->
+          <div class="control-section">
+            <h3>Right Leg</h3>
+            <div class="slider-control">
+              <label for="rightHip">Hip:</label>
+              <input type="range" id="rightHip" min="-1.57" max="1.57" step="0.01" value="-0.393">
+              <span class="value-display" id="rightHipValue">-0.39</span>
+            </div>
+            <div class="slider-control">
+              <label for="rightKnee">Knee:</label>
+              <input type="range" id="rightKnee" min="-1.57" max="1.57" step="0.01" value="-0.262">
+              <span class="value-display" id="rightKneeValue">-0.26</span>
+            </div>
+          </div>
+
+          <!-- Animation Controls -->
+          <div class="control-section">
+            <h3>Animation</h3>
+            <div class="animation-controls">
+              <input type="text" id="keyframeTime" placeholder="Time (seconds)" value="0">
+              <button id="addKeyframeBtn">Add Keyframe</button>
+              <button id="newAnimationBtn">New Animation</button>
+              <button id="saveAnimationBtn">Save Animation</button>
+            </div>
+            <div id="keyframeList" class="keyframe-list"></div>
+          </div>
+        </div>
         <div class="info">
-          This code will generate the image you see on the canvas.
+          Adjust the sliders to pose your stick figure. Add keyframes to create animations!
         </div>
       </div>
     </div>
