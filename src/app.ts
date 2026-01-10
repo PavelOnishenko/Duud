@@ -29,10 +29,59 @@ class DuudApp {
     this.stickFigure = new StickFigure(createDefaultStickFigure(400, 300));
     this.animator = new Animator(this.stickFigure);
 
+    this.loadSavedAnimations();
     this.initializeUI();
     this.initializePoseEditor();
+    this.loadSelectedAnimation();
     this.startRenderLoop();
     this.drawFrame();
+  }
+
+  private loadSavedAnimations(): void {
+    try {
+      const saved = localStorage.getItem('duud_animations');
+      if (saved) {
+        const savedAnimations: Animation[] = JSON.parse(saved);
+        savedAnimations.forEach(anim => {
+          // Only add if not already in ANIMATIONS
+          if (!ANIMATIONS.find(a => a.name === anim.name)) {
+            ANIMATIONS.push(anim);
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Failed to load saved animations:', e);
+    }
+  }
+
+  private saveAnimationsToStorage(): void {
+    try {
+      // Save all animations to localStorage
+      const animationsToSave = ANIMATIONS.map(anim => ({
+        name: anim.name,
+        duration: anim.duration,
+        loop: anim.loop,
+        keyframes: anim.keyframes
+      }));
+      localStorage.setItem('duud_animations', JSON.stringify(animationsToSave));
+    } catch (e) {
+      console.error('Failed to save animations:', e);
+    }
+  }
+
+  private populateAnimationDropdown(): void {
+    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
+    animationSelect.innerHTML = '';
+
+    ANIMATIONS.forEach(anim => {
+      const option = document.createElement('option');
+      option.value = anim.name;
+      option.textContent = anim.name;
+      if (anim.name === this.selectedAnimation) {
+        option.selected = true;
+      }
+      animationSelect.appendChild(option);
+    });
   }
 
   private initializeUI(): void {
@@ -45,8 +94,12 @@ class DuudApp {
     const speedValue = document.getElementById('speedValue') as HTMLSpanElement;
     const renderBtn = document.getElementById('renderBtn') as HTMLButtonElement;
 
+    // Populate animation dropdown with all animations
+    this.populateAnimationDropdown();
+
     animationSelect.addEventListener('change', (e) => {
       this.selectedAnimation = (e.target as HTMLSelectElement).value;
+      this.loadSelectedAnimation();
     });
 
     playBtn.addEventListener('click', () => {
@@ -143,6 +196,15 @@ class DuudApp {
     });
   }
 
+  private loadSelectedAnimation(): void {
+    const animation = getAnimationByName(this.selectedAnimation);
+    if (animation) {
+      this.currentAnimationName = animation.name;
+      this.currentKeyframes = [...animation.keyframes];
+      this.updateKeyframeList();
+    }
+  }
+
   private addKeyframe(): void {
     const timeInput = document.getElementById('keyframeTime') as HTMLInputElement;
     const time = parseFloat(timeInput.value) || 0;
@@ -181,6 +243,15 @@ class DuudApp {
     this.updateKeyframeList();
   }
 
+  public loadKeyframeIntoPose(time: number): void {
+    const keyframe = this.currentKeyframes.find(kf => kf.time === time);
+    if (keyframe) {
+      this.stickFigure.setParams(keyframe.params);
+      this.updatePoseEditorFromStickFigure();
+      this.drawFrame();
+    }
+  }
+
   private updateKeyframeList(): void {
     const keyframeList = document.getElementById('keyframeList') as HTMLDivElement;
 
@@ -190,9 +261,9 @@ class DuudApp {
     }
 
     keyframeList.innerHTML = this.currentKeyframes.map(kf => `
-      <div class="keyframe-item">
+      <div class="keyframe-item" style="cursor: pointer;" onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
         <span class="time">${kf.time.toFixed(2)}s</span>
-        <button onclick="window.duudApp.deleteKeyframe(${kf.time})">Delete</button>
+        <button onclick="event.stopPropagation(); window.duudApp.deleteKeyframe(${kf.time})">Delete</button>
       </div>
     `).join('');
   }
@@ -221,15 +292,26 @@ class DuudApp {
       loop: confirm('Should this animation loop?')
     };
 
-    // Add to animations list
-    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
-    const option = document.createElement('option');
-    option.value = animation.name;
-    option.textContent = animation.name;
-    animationSelect.appendChild(option);
+    // Check if animation with this name already exists
+    const existingIndex = ANIMATIONS.findIndex(a => a.name === animation.name);
+    if (existingIndex >= 0) {
+      // Update existing animation
+      ANIMATIONS[existingIndex] = animation;
+    } else {
+      // Add new animation
+      ANIMATIONS.push(animation);
+    }
 
-    // Store in ANIMATIONS array
-    ANIMATIONS.push(animation);
+    // Save to localStorage
+    this.saveAnimationsToStorage();
+
+    // Refresh dropdown
+    this.populateAnimationDropdown();
+
+    // Select the saved animation
+    this.selectedAnimation = animation.name;
+    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
+    animationSelect.value = animation.name;
 
     alert(`Animation "${animation.name}" saved successfully!`);
   }
