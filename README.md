@@ -21,7 +21,7 @@ Duud is a TypeScript-based stick figure animation studio that lets you create an
 3. **Start the server:**
    ```bash
    npm run serve
-   ```
+   ``` 
 
 4. **Open your browser:**
    Navigate to `http://localhost:8080`
