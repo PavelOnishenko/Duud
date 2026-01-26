@@ -251,44 +251,7 @@
       font-size: 13px;
     }
 
-    .keyframe-list {
-      background: #2d2d30;
-      border-radius: 4px;
-      padding: 10px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    .keyframe-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      margin-bottom: 5px;
-      background: #1e1e1e;
-      border-radius: 3px;
-      font-size: 13px;
-    }
-
-    .keyframe-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .keyframe-item .time {
-      color: #4ec9b0;
-      font-family: 'Consolas', 'Monaco', monospace;
-    }
-
-    .keyframe-item button {
-      padding: 4px 10px;
-      font-size: 11px;
-      background: #d13438;
-    }
-
-    .keyframe-item button:hover {
-      background: #e04447;
-    }
-
+    /* Timeline Panel */
     .keyframes-panel {
       background: #252526;
       padding: 20px;
@@ -304,16 +267,138 @@
       letter-spacing: 0.5px;
     }
 
-    .keyframes-panel .keyframe-list {
-      max-height: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+    .timeline-container {
+      background: #1e1e1e;
+      border-radius: 4px;
+      padding: 15px 20px;
+      position: relative;
     }
 
-    .keyframes-panel .keyframe-item {
-      margin-bottom: 0;
-      flex-shrink: 0;
+    .timeline-empty {
+      color: #858585;
+      font-size: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .timeline-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: #858585;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+
+    .timeline-track {
+      position: relative;
+      height: 40px;
+      background: #2d2d30;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .timeline-ruler {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .timeline-tick {
+      flex: 1;
+      border-left: 1px solid #3c3c3c;
+      height: 100%;
+    }
+
+    .timeline-tick:last-child {
+      border-right: 1px solid #3c3c3c;
+    }
+
+    .timeline-tick.major {
+      border-left-color: #555;
+    }
+
+    .keyframe-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #4ec9b0;
+      border-radius: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 2;
+      border: 2px solid #3c3c3c;
+    }
+
+    .keyframe-dot:hover {
+      width: 20px;
+      height: 20px;
+      background: #6fd9c0;
+      box-shadow: 0 0 8px rgba(78, 201, 176, 0.6);
+    }
+
+    .keyframe-dot.selected {
+      background: #569cd6;
+      border-color: #fff;
+    }
+
+    .keyframe-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 10;
+    }
+
+    .keyframe-dot:hover .keyframe-tooltip {
+      opacity: 1;
+    }
+
+    .keyframe-tooltip .time {
+      color: #4ec9b0;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-weight: bold;
+    }
+
+    .keyframe-tooltip .delete-btn {
+      margin-left: 8px;
+      color: #d13438;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .keyframe-tooltip .delete-btn:hover {
+      color: #e04447;
+      text-decoration: underline;
+    }
+
+    .timeline-duration {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #858585;
+    }
+
+    .timeline-duration .duration-value {
+      color: #4ec9b0;
+      font-family: 'Consolas', 'Monaco', monospace;
     }
 
     @media (max-width: 1200px) {
@@ -456,10 +541,12 @@
       </div>
     </div>
 
-    <!-- Keyframes Panel -->
+    <!-- Timeline Panel -->
     <div class="keyframes-panel">
-      <h3>Keyframes</h3>
-      <div id="keyframeList" class="keyframe-list"></div>
+      <h3>Timeline</h3>
+      <div id="timelineContainer" class="timeline-container">
+        <div class="timeline-empty">No keyframes added yet</div>
+      </div>
     </div>
   </div>
 
