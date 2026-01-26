@@ -14,6 +14,7 @@ class DuudApp {
   private currentKeyframes: Keyframe[] = [];
   private currentAnimationName: string = 'My Animation';
   private poseEditorEnabled: boolean = true;
+  private selectedKeyframeTime: number | null = null;
 
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -201,6 +202,7 @@ class DuudApp {
     if (animation) {
       this.currentAnimationName = animation.name;
       this.currentKeyframes = [...animation.keyframes];
+      this.selectedKeyframeTime = null; // Clear selection when loading new animation
       this.updateKeyframeList();
     }
   }
@@ -235,20 +237,40 @@ class DuudApp {
       this.currentKeyframes.sort((a, b) => a.time - b.time);
     }
 
+    // Select the newly added/updated keyframe
+    this.selectedKeyframeTime = time;
+
     this.updateKeyframeList();
   }
 
   public deleteKeyframe(time: number): void {
     this.currentKeyframes = this.currentKeyframes.filter(kf => kf.time !== time);
+
+    // Clear selection if deleted keyframe was selected
+    if (this.selectedKeyframeTime === time) {
+      this.selectedKeyframeTime = null;
+    }
+
     this.updateKeyframeList();
   }
 
   public loadKeyframeIntoPose(time: number): void {
     const keyframe = this.currentKeyframes.find(kf => kf.time === time);
     if (keyframe) {
+      // Update the stick figure with keyframe params
       this.stickFigure.setParams(keyframe.params);
       this.updatePoseEditorFromStickFigure();
       this.drawFrame();
+
+      // Track the selected keyframe
+      this.selectedKeyframeTime = time;
+
+      // Update the time input to match selected keyframe
+      const timeInput = document.getElementById('keyframeTime') as HTMLInputElement;
+      timeInput.value = time.toString();
+
+      // Refresh timeline to show selection
+      this.updateKeyframeList();
     }
   }
 
@@ -279,8 +301,9 @@ class DuudApp {
     // Generate keyframe dots
     const dots = this.currentKeyframes.map(kf => {
       const position = (kf.time / duration) * 100;
+      const isSelected = this.selectedKeyframeTime === kf.time;
       return `
-        <div class="keyframe-dot"
+        <div class="keyframe-dot${isSelected ? ' selected' : ''}"
              style="left: ${position}%"
              onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
           <div class="keyframe-tooltip">
@@ -311,6 +334,7 @@ class DuudApp {
     if (name) {
       this.currentAnimationName = name;
       this.currentKeyframes = [];
+      this.selectedKeyframeTime = null; // Clear selection for new animation
       this.updateKeyframeList();
       alert(`New animation "${name}" created! Start adding keyframes.`);
     }

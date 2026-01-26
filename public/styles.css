@@ -339,6 +339,12 @@ canvas {
 .keyframe-dot.selected {
   background: #569cd6;
   border-color: #fff;
+  box-shadow: 0 0 10px rgba(86, 156, 214, 0.8);
+}
+
+.keyframe-dot.selected:hover {
+  background: #6fadea;
+  box-shadow: 0 0 12px rgba(86, 156, 214, 1);
 }
 
 .keyframe-tooltip {
