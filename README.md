@@ -21,7 +21,7 @@ Duud is a TypeScript-based tool that lets you create images by placing shapes on
 3. **Start the server:**
    ```bash
    npm run serve
-   ```
+   ``` 
 
 4. **Open your browser:**
    Navigate to `http://localhost:8080`
