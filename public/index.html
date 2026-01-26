@@ -289,6 +289,33 @@
       background: #e04447;
     }
 
+    .keyframes-panel {
+      background: #252526;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .keyframes-panel h3 {
+      color: #569cd6;
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .keyframes-panel .keyframe-list {
+      max-height: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .keyframes-panel .keyframe-item {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
     @media (max-width: 1200px) {
       .main-content {
         grid-template-columns: 1fr;
@@ -421,13 +448,18 @@
               <button id="newAnimationBtn">New Animation</button>
               <button id="saveAnimationBtn">Save Animation</button>
             </div>
-            <div id="keyframeList" class="keyframe-list"></div>
           </div>
         </div>
         <div class="info">
           Adjust the sliders to pose your stick figure. Add keyframes to create animations!
         </div>
       </div>
+    </div>
+
+    <!-- Keyframes Panel -->
+    <div class="keyframes-panel">
+      <h3>Keyframes</h3>
+      <div id="keyframeList" class="keyframe-list"></div>
     </div>
   </div>
 
