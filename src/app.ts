@@ -14,6 +14,7 @@ class DuudApp {
   private currentKeyframes: Keyframe[] = [];
   private currentAnimationName: string = 'My Animation';
   private poseEditorEnabled: boolean = true;
+  private selectedKeyframeTime: number | null = null;
 
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -201,6 +202,7 @@ class DuudApp {
     if (animation) {
       this.currentAnimationName = animation.name;
       this.currentKeyframes = [...animation.keyframes];
+      this.selectedKeyframeTime = null; // Clear selection when loading new animation
       this.updateKeyframeList();
     }
   }
@@ -235,37 +237,96 @@ class DuudApp {
       this.currentKeyframes.sort((a, b) => a.time - b.time);
     }
 
+    // Select the newly added/updated keyframe
+    this.selectedKeyframeTime = time;
+
     this.updateKeyframeList();
   }
 
   public deleteKeyframe(time: number): void {
     this.currentKeyframes = this.currentKeyframes.filter(kf => kf.time !== time);
+
+    // Clear selection if deleted keyframe was selected
+    if (this.selectedKeyframeTime === time) {
+      this.selectedKeyframeTime = null;
+    }
+
     this.updateKeyframeList();
   }
 
   public loadKeyframeIntoPose(time: number): void {
     const keyframe = this.currentKeyframes.find(kf => kf.time === time);
     if (keyframe) {
+      // Update the stick figure with keyframe params
       this.stickFigure.setParams(keyframe.params);
       this.updatePoseEditorFromStickFigure();
       this.drawFrame();
+
+      // Track the selected keyframe
+      this.selectedKeyframeTime = time;
+
+      // Update the time input to match selected keyframe
+      const timeInput = document.getElementById('keyframeTime') as HTMLInputElement;
+      timeInput.value = time.toString();
+
+      // Refresh timeline to show selection
+      this.updateKeyframeList();
     }
   }
 
   private updateKeyframeList(): void {
-    const keyframeList = document.getElementById('keyframeList') as HTMLDivElement;
+    const timelineContainer = document.getElementById('timelineContainer') as HTMLDivElement;
 
     if (this.currentKeyframes.length === 0) {
-      keyframeList.innerHTML = '<div style="color: #858585; font-size: 12px; padding: 5px;">No keyframes added yet</div>';
+      timelineContainer.innerHTML = '<div class="timeline-empty">No keyframes added yet</div>';
       return;
     }
 
-    keyframeList.innerHTML = this.currentKeyframes.map(kf => `
-      <div class="keyframe-item" style="cursor: pointer;" onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
-        <span class="time">${kf.time.toFixed(2)}s</span>
-        <button onclick="event.stopPropagation(); window.duudApp.deleteKeyframe(${kf.time})">Delete</button>
+    // Calculate duration (max time + some padding, minimum 1 second)
+    const maxTime = Math.max(...this.currentKeyframes.map(kf => kf.time));
+    const duration = Math.max(1, Math.ceil(maxTime * 1.2)); // Add 20% padding
+
+    // Generate time scale markers
+    const numMarkers = Math.min(duration + 1, 11); // Max 11 markers (0-10)
+    const markerStep = duration / (numMarkers - 1);
+    const scaleMarkers = Array.from({ length: numMarkers }, (_, i) =>
+      (i * markerStep).toFixed(1) + 's'
+    );
+
+    // Generate tick marks (10 ticks)
+    const ticks = Array.from({ length: 10 }, (_, i) =>
+      `<div class="timeline-tick${i % 5 === 0 ? ' major' : ''}"></div>`
+    ).join('');
+
+    // Generate keyframe dots
+    const dots = this.currentKeyframes.map(kf => {
+      const position = (kf.time / duration) * 100;
+      const isSelected = this.selectedKeyframeTime === kf.time;
+      return `
+        <div class="keyframe-dot${isSelected ? ' selected' : ''}"
+             style="left: ${position}%"
+             onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
+          <div class="keyframe-tooltip">
+            <span class="time">${kf.time.toFixed(2)}s</span>
+            <span class="delete-btn" onclick="event.stopPropagation(); window.duudApp.deleteKeyframe(${kf.time})">Delete</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    timelineContainer.innerHTML = `
+      <div class="timeline-scale">
+        ${scaleMarkers.map(m => `<span>${m}</span>`).join('')}
       </div>
-    `).join('');
+      <div class="timeline-track">
+        <div class="timeline-ruler">${ticks}</div>
+        ${dots}
+      </div>
+      <div class="timeline-duration">
+        <span>Keyframes: <span class="duration-value">${this.currentKeyframes.length}</span></span>
+        <span>Duration: <span class="duration-value">${maxTime.toFixed(2)}s</span></span>
+      </div>
+    `;
   }
 
   private createNewAnimation(): void {
@@ -273,6 +334,7 @@ class DuudApp {
     if (name) {
       this.currentAnimationName = name;
       this.currentKeyframes = [];
+      this.selectedKeyframeTime = null; // Clear selection for new animation
       this.updateKeyframeList();
       alert(`New animation "${name}" created! Start adding keyframes.`);
     }
