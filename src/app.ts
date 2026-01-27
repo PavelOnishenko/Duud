@@ -133,6 +133,11 @@ class DuudApp {
     renderBtn.addEventListener('click', () => {
       this.renderSpriteSheet();
     });
+
+    const exportTsBtn = document.getElementById('exportTsBtn') as HTMLButtonElement;
+    exportTsBtn.addEventListener('click', () => {
+      this.exportToTypeScript();
+    });
   }
 
   private initializePoseEditor(): void {
@@ -539,6 +544,101 @@ class DuudApp {
     }
 
     this.stickFigure.setParams(interpolated);
+  }
+
+  private exportToTypeScript(): void {
+    const animation = getAnimationByName(this.selectedAnimation);
+    if (!animation) {
+      alert('Please select an animation to export.');
+      return;
+    }
+
+    // Convert number to readable format (using Math.PI where appropriate)
+    const formatNumber = (value: number): string => {
+      // Check for common PI fractions
+      const piRatios = [
+        { ratio: 1, label: 'Math.PI' },
+        { ratio: 1/2, label: 'Math.PI / 2' },
+        { ratio: 1/3, label: 'Math.PI / 3' },
+        { ratio: 1/4, label: 'Math.PI / 4' },
+        { ratio: 1/5, label: 'Math.PI / 5' },
+        { ratio: 1/6, label: 'Math.PI / 6' },
+        { ratio: 1/8, label: 'Math.PI / 8' },
+        { ratio: 1/10, label: 'Math.PI / 10' },
+        { ratio: 1/12, label: 'Math.PI / 12' },
+        { ratio: 1/16, label: 'Math.PI / 16' },
+        { ratio: 2/3, label: '2 * Math.PI / 3' },
+        { ratio: 3/4, label: '3 * Math.PI / 4' },
+        { ratio: 1/1.2, label: 'Math.PI / 1.2' },
+        { ratio: 1/1.5, label: 'Math.PI / 1.5' },
+        { ratio: 1/2.2, label: 'Math.PI / 2.2' },
+        { ratio: 1/2.5, label: 'Math.PI / 2.5' },
+      ];
+
+      const absValue = Math.abs(value);
+      const sign = value < 0 ? '-' : '';
+
+      for (const { ratio, label } of piRatios) {
+        if (Math.abs(absValue - Math.PI * ratio) < 0.0001) {
+          return sign + label;
+        }
+      }
+
+      // For other values, just use the number
+      return value.toString();
+    };
+
+    // Generate keyframe params code
+    const generateParams = (params: Partial<StickFigureParams>): string => {
+      const lines: string[] = [];
+      for (const [key, value] of Object.entries(params)) {
+        if (typeof value === 'number') {
+          lines.push(`        ${key}: ${formatNumber(value)}`);
+        }
+      }
+      return lines.join(',\n');
+    };
+
+    // Generate keyframes code
+    const keyframesCode = animation.keyframes.map(kf => {
+      return `    {
+      time: ${kf.time},
+      params: {
+${generateParams(kf.params)}
+      }
+    }`;
+    }).join(',\n');
+
+    // Generate the constant name from animation name
+    const constName = animation.name
+      .toUpperCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^A-Z0-9_]/g, '') + '_ANIMATION';
+
+    // Generate full TypeScript code
+    const tsCode = `import { Animation } from './animator.js';
+
+export const ${constName}: Animation = {
+  name: '${animation.name}',
+  duration: ${animation.duration},
+  loop: ${animation.loop},
+  keyframes: [
+${keyframesCode}
+  ]
+};
+`;
+
+    // Download the file
+    const blob = new Blob([tsCode], { type: 'text/typescript' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const animName = animation.name.replace(/\s+/g, '-').toLowerCase();
+    link.download = `${animName}-animation-${timestamp}.ts`;
+    link.href = url;
+    link.click();
+
+    URL.revokeObjectURL(url);
   }
 }
 
