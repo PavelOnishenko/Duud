@@ -208,7 +208,6 @@ class DuudApp {
     sliders.forEach(({ id, param, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
-      const formatValue = format ?? defaultFormat;
 
       slider.addEventListener('input', () => {
         if (this.poseEditorEnabled) {
@@ -301,6 +300,7 @@ class DuudApp {
       { id: 'rightThighLength', param: 'rightThighLength', valueId: 'rightThighLengthValue', format: (v) => v.toFixed(0) },
       { id: 'rightCalfLength', param: 'rightCalfLength', valueId: 'rightCalfLengthValue', format: (v) => v.toFixed(0) }
     ];
+  }
 
   private initializeKeyframeInteractions(): void {
     this.setupKeyframeContextMenu();
