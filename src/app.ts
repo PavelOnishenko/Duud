@@ -465,6 +465,22 @@ class DuudApp {
   }
 
   private playAnimation(): void {
+    if (
+      !this.animator.isAnimating() &&
+      this.animator.getCurrentAnimation() &&
+      this.animator.getCurrentTime() > 0
+    ) {
+      const currentAnimation = this.animator.getCurrentAnimation();
+      const targetName =
+        this.currentKeyframes.length === 0
+          ? this.selectedAnimation
+          : this.currentAnimationName;
+      if (currentAnimation?.name === targetName) {
+        this.animator.resume();
+        return;
+      }
+    }
+
     if (this.currentKeyframes.length === 0) {
       const animation = getAnimationByName(this.selectedAnimation);
       if (animation) {
