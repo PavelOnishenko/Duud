@@ -69,6 +69,73 @@ select {
   min-width: 120px;
 }
 
+/* Animation List */
+.animation-selector {
+  position: relative;
+}
+
+.animation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 400px;
+}
+
+.animation-item {
+  display: flex;
+  align-items: center;
+  background: #3c3c3c;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.animation-item.selected {
+  background: #0e639c;
+  border-color: #1177bb;
+}
+
+.animation-item:hover {
+  border-color: #777;
+}
+
+.animation-item.selected:hover {
+  border-color: #3399dd;
+}
+
+.animation-name {
+  cursor: pointer;
+  padding-right: 6px;
+}
+
+.animation-delete-btn {
+  color: #888;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: 2px;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.animation-delete-btn:hover {
+  color: #d13438;
+  background: rgba(209, 52, 56, 0.15);
+}
+
+.animation-item.selected .animation-delete-btn {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.animation-item.selected .animation-delete-btn:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.2);
+}
+
 input[type="color"] {
   width: 40px;
   height: 32px;

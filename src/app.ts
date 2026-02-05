@@ -71,22 +71,78 @@ class DuudApp {
   }
 
   private populateAnimationDropdown(): void {
-    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
-    animationSelect.innerHTML = '';
+    const animationList = document.getElementById('animationList') as HTMLDivElement;
+    animationList.innerHTML = '';
 
     ANIMATIONS.forEach(anim => {
-      const option = document.createElement('option');
-      option.value = anim.name;
-      option.textContent = anim.name;
-      if (anim.name === this.selectedAnimation) {
-        option.selected = true;
-      }
-      animationSelect.appendChild(option);
+      const item = document.createElement('div');
+      item.className = 'animation-item' + (anim.name === this.selectedAnimation ? ' selected' : '');
+      item.dataset.name = anim.name;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'animation-name';
+      nameSpan.textContent = anim.name;
+      nameSpan.addEventListener('click', () => {
+        this.selectAnimation(anim.name);
+      });
+
+      const deleteBtn = document.createElement('span');
+      deleteBtn.className = 'animation-delete-btn';
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete animation';
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteAnimation(anim.name);
+      });
+
+      item.appendChild(nameSpan);
+      item.appendChild(deleteBtn);
+      animationList.appendChild(item);
     });
   }
 
+  public selectAnimation(name: string): void {
+    this.selectedAnimation = name;
+    this.loadSelectedAnimation();
+    this.populateAnimationDropdown();
+  }
+
+  public deleteAnimation(name: string): void {
+    // Find the animation index
+    const index = ANIMATIONS.findIndex(a => a.name === name);
+    if (index === -1) {
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm(`Delete animation "${name}"?`)) {
+      return;
+    }
+
+    // Remove from ANIMATIONS array
+    ANIMATIONS.splice(index, 1);
+
+    // Save to localStorage
+    this.saveAnimationsToStorage();
+
+    // If we deleted the currently selected animation, select another
+    if (this.selectedAnimation === name) {
+      if (ANIMATIONS.length > 0) {
+        this.selectedAnimation = ANIMATIONS[0].name;
+        this.loadSelectedAnimation();
+      } else {
+        this.selectedAnimation = '';
+        this.currentKeyframes = [];
+        this.currentAnimationName = '';
+        this.updateKeyframeList();
+      }
+    }
+
+    // Refresh the list
+    this.populateAnimationDropdown();
+  }
+
   private initializeUI(): void {
-    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
     const playBtn = document.getElementById('playBtn') as HTMLButtonElement;
     const pauseBtn = document.getElementById('pauseBtn') as HTMLButtonElement;
     const stopBtn = document.getElementById('stopBtn') as HTMLButtonElement;
@@ -95,13 +151,8 @@ class DuudApp {
     const speedValue = document.getElementById('speedValue') as HTMLSpanElement;
     const renderBtn = document.getElementById('renderBtn') as HTMLButtonElement;
 
-    // Populate animation dropdown with all animations
+    // Populate animation list with all animations
     this.populateAnimationDropdown();
-
-    animationSelect.addEventListener('change', (e) => {
-      this.selectedAnimation = (e.target as HTMLSelectElement).value;
-      this.loadSelectedAnimation();
-    });
 
     playBtn.addEventListener('click', () => {
       this.playAnimation();
@@ -372,13 +423,9 @@ class DuudApp {
     // Save to localStorage
     this.saveAnimationsToStorage();
 
-    // Refresh dropdown
-    this.populateAnimationDropdown();
-
-    // Select the saved animation
+    // Select the saved animation and refresh list
     this.selectedAnimation = animation.name;
-    const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
-    animationSelect.value = animation.name;
+    this.populateAnimationDropdown();
 
     alert(`Animation "${animation.name}" saved successfully!`);
   }

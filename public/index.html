@@ -12,13 +12,11 @@
 
     <!-- Playback Controls -->
     <div class="controls">
-      <div class="control-group">
-        <label for="animationType">Animation:</label>
-        <select id="animationType">
-          <option value="Punch">Punch</option>
-          <option value="Get Hit">Get Hit</option>
-          <option value="Die">Die</option>
-        </select>
+      <div class="control-group animation-selector">
+        <label>Animation:</label>
+        <div id="animationList" class="animation-list">
+          <!-- Animation items populated dynamically -->
+        </div>
       </div>
 
       <button id="playBtn">▶ Play</button>
