@@ -441,10 +441,28 @@ class DuudApp {
   }
 
   private playAnimation(): void {
-    const animation = getAnimationByName(this.selectedAnimation);
-    if (animation) {
-      this.animator.play(animation);
+    if (this.currentKeyframes.length === 0) {
+      const animation = getAnimationByName(this.selectedAnimation);
+      if (animation) {
+        this.animator.play(animation);
+        return;
+      }
+
+      alert('Please add at least one keyframe to play.');
+      return;
     }
+
+    const sortedKeyframes = [...this.currentKeyframes].sort((a, b) => a.time - b.time);
+    const maxTime = Math.max(...sortedKeyframes.map(kf => kf.time));
+    const selectedAnimation = getAnimationByName(this.selectedAnimation);
+    const animation: Animation = {
+      name: this.currentAnimationName,
+      duration: maxTime,
+      keyframes: sortedKeyframes,
+      loop: selectedAnimation?.loop ?? false
+    };
+
+    this.animator.play(animation);
   }
 
   private startRenderLoop(): void {
