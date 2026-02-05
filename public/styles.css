@@ -277,6 +277,18 @@ canvas {
   font-size: 11px;
 }
 
+.checkbox-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #d4d4d4;
+}
+
+.checkbox-control input[type="checkbox"] {
+  accent-color: #0e639c;
+}
+
 /* Timeline Panel */
 .keyframes-panel {
   background: #252526;
@@ -408,16 +420,32 @@ canvas {
   font-weight: bold;
 }
 
-.keyframe-tooltip .delete-btn {
-  margin-left: 8px;
-  color: #d13438;
-  cursor: pointer;
-  font-size: 10px;
+.keyframe-context-menu {
+  position: fixed;
+  min-width: 140px;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
-.keyframe-tooltip .delete-btn:hover {
+.keyframe-context-menu .context-delete {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #d13438;
+  font-size: 12px;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.keyframe-context-menu .context-delete:hover {
+  background: rgba(209, 52, 56, 0.15);
   color: #e04447;
-  text-decoration: underline;
 }
 
 .timeline-duration {

@@ -8,6 +8,17 @@ export interface StickFigureParams {
   neckAngle: number;
   torsoAngle: number;
 
+  // Bone lengths (base units)
+  torsoLength: number;
+  leftUpperArmLength: number;
+  leftForearmLength: number;
+  rightUpperArmLength: number;
+  rightForearmLength: number;
+  leftThighLength: number;
+  leftCalfLength: number;
+  rightThighLength: number;
+  rightCalfLength: number;
+
   // Arms
   leftShoulderAngle: number;
   leftElbowAngle: number;
@@ -35,6 +46,15 @@ export function createDefaultStickFigure(x: number = 400, y: number = 300): Stic
     headTilt: 0,
     neckAngle: 0,
     torsoAngle: 0,
+    torsoLength: 50,
+    leftUpperArmLength: 35,
+    leftForearmLength: 30,
+    rightUpperArmLength: 35,
+    rightForearmLength: 30,
+    leftThighLength: 40,
+    leftCalfLength: 35,
+    rightThighLength: 40,
+    rightCalfLength: 35,
     leftShoulderAngle: Math.PI / 4,
     leftElbowAngle: Math.PI / 6,
     rightShoulderAngle: -Math.PI / 4,
@@ -74,11 +94,15 @@ export class StickFigure {
 
     // Base measurements (scaled)
     const headRadius = 15 * s;
-    const torsoLength = 50 * s;
-    const upperArmLength = 35 * s;
-    const forearmLength = 30 * s;
-    const thighLength = 40 * s;
-    const calfLength = 35 * s;
+    const torsoLength = p.torsoLength * s;
+    const leftUpperArmLength = p.leftUpperArmLength * s;
+    const leftForearmLength = p.leftForearmLength * s;
+    const rightUpperArmLength = p.rightUpperArmLength * s;
+    const rightForearmLength = p.rightForearmLength * s;
+    const leftThighLength = p.leftThighLength * s;
+    const leftCalfLength = p.leftCalfLength * s;
+    const rightThighLength = p.rightThighLength * s;
+    const rightCalfLength = p.rightCalfLength * s;
 
     // Head
     ctx.fillStyle = p.headColor;
@@ -112,8 +136,8 @@ export class StickFigure {
       -torsoLength / 2 + 5 * s,
       p.leftShoulderAngle,
       p.leftElbowAngle,
-      upperArmLength,
-      forearmLength,
+      leftUpperArmLength,
+      leftForearmLength,
       p.limbColor,
       p.lineWidth
     );
@@ -125,8 +149,8 @@ export class StickFigure {
       -torsoLength / 2 + 5 * s,
       p.rightShoulderAngle,
       p.rightElbowAngle,
-      upperArmLength,
-      forearmLength,
+      rightUpperArmLength,
+      rightForearmLength,
       p.limbColor,
       p.lineWidth
     );
@@ -138,8 +162,8 @@ export class StickFigure {
       torsoEndY - torsoLength / 2,
       p.leftHipAngle,
       p.leftKneeAngle,
-      thighLength,
-      calfLength,
+      leftThighLength,
+      leftCalfLength,
       p.limbColor,
       p.lineWidth
     );
@@ -151,8 +175,8 @@ export class StickFigure {
       torsoEndY - torsoLength / 2,
       p.rightHipAngle,
       p.rightKneeAngle,
-      thighLength,
-      calfLength,
+      rightThighLength,
+      rightCalfLength,
       p.limbColor,
       p.lineWidth
     );

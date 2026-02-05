@@ -9,12 +9,16 @@ class DuudApp {
   private animator: Animator;
   private animationFrameId: number | null = null;
   private selectedAnimation: string = '';
+  private readonly floorY: number = 400;
 
   // Pose editor state
   private currentKeyframes: Keyframe[] = [];
   private currentAnimationName: string = 'My Animation';
   private poseEditorEnabled: boolean = true;
   private selectedKeyframeTime: number | null = null;
+  private currentAnimationLoop: boolean = false;
+  private keyframeContextMenu: HTMLDivElement | null = null;
+  private contextMenuKeyframeTime: number | null = null;
 
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -33,6 +37,7 @@ class DuudApp {
     this.loadSavedAnimations();
     this.initializeUI();
     this.initializePoseEditor();
+    this.initializeKeyframeInteractions();
     this.loadSelectedAnimation();
     this.startRenderLoop();
     this.drawFrame();
@@ -107,6 +112,7 @@ class DuudApp {
     const speedSlider = document.getElementById('speedSlider') as HTMLInputElement;
     const speedValue = document.getElementById('speedValue') as HTMLSpanElement;
     const renderBtn = document.getElementById('renderBtn') as HTMLButtonElement;
+    const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
 
     // Populate animation dropdown with all animations
     this.populateAnimationDropdown();
@@ -156,6 +162,10 @@ class DuudApp {
     deleteAnimationBtn.addEventListener('click', () => {
       this.deleteSelectedAnimation();
     });
+
+    loopToggle.addEventListener('change', () => {
+      this.currentAnimationLoop = loopToggle.checked;
+    });
   }
 
   private deleteSelectedAnimation(): void {
@@ -184,34 +194,25 @@ class DuudApp {
         this.selectedAnimation = '';
         this.currentKeyframes = [];
         this.currentAnimationName = 'My Animation';
+        this.currentAnimationLoop = false;
+        const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+        loopToggle.checked = false;
         this.updateKeyframeList();
       }
     }
   }
 
   private initializePoseEditor(): void {
-    // Joint angle sliders
-    const sliders = [
-      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue' },
-      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue' },
-      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue' },
-      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue' },
-      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue' },
-      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue' }
-    ];
+    const sliders = this.getPoseSliderConfigs();
 
-    sliders.forEach(({ id, param, valueId }) => {
+    sliders.forEach(({ id, param, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
 
       slider.addEventListener('input', () => {
         if (this.poseEditorEnabled) {
           const value = parseFloat(slider.value);
-          valueDisplay.textContent = value.toFixed(2);
+          valueDisplay.textContent = format(value);
           this.stickFigure.setParams({ [param]: value } as Partial<StickFigureParams>);
           this.drawFrame();
         }
@@ -228,27 +229,173 @@ class DuudApp {
     saveAnimationBtn.addEventListener('click', () => this.saveAnimation());
   }
 
+  private normalizeKeyframes(
+    keyframes: Keyframe[],
+    fallbackParams: StickFigureParams
+  ): Keyframe[] {
+    const sorted = [...keyframes].sort((a, b) => a.time - b.time);
+    let lastX = fallbackParams.x;
+    let lastY = fallbackParams.y;
+
+    return sorted.map((keyframe) => {
+      const params = { ...keyframe.params };
+
+      if (typeof params.x !== 'number') {
+        params.x = lastX;
+      }
+
+      if (typeof params.y !== 'number') {
+        params.y = lastY;
+      }
+
+      lastX = params.x;
+      lastY = params.y;
+
+      return { ...keyframe, params };
+    });
+  }
+
   private updatePoseEditorFromStickFigure(): void {
     const params = this.stickFigure.getParams();
-    const updates = [
-      { id: 'headTilt', value: params.headTilt, valueId: 'headTiltValue' },
-      { id: 'torsoAngle', value: params.torsoAngle, valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', value: params.leftShoulderAngle, valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', value: params.leftElbowAngle, valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', value: params.rightShoulderAngle, valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', value: params.rightElbowAngle, valueId: 'rightElbowValue' },
-      { id: 'leftHip', value: params.leftHipAngle, valueId: 'leftHipValue' },
-      { id: 'leftKnee', value: params.leftKneeAngle, valueId: 'leftKneeValue' },
-      { id: 'rightHip', value: params.rightHipAngle, valueId: 'rightHipValue' },
-      { id: 'rightKnee', value: params.rightKneeAngle, valueId: 'rightKneeValue' }
-    ];
+    const updates = this.getPoseSliderConfigs().map(({ id, param, valueId, format }) => ({
+      id,
+      valueId,
+      value: params[param] as number,
+      format
+    }));
 
-    updates.forEach(({ id, value, valueId }) => {
+    updates.forEach(({ id, value, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
+      const formatValue = format ?? ((num: number) => num.toFixed(2));
       slider.value = value.toString();
-      valueDisplay.textContent = value.toFixed(2);
+      valueDisplay.textContent = formatValue(value);
     });
+  }
+  
+   private getPoseSliderConfigs(): Array<{
+    id: string;
+    param: keyof StickFigureParams;
+    valueId: string;
+    format: (value: number) => string;
+  }> {
+    return [
+      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue', format: (v) => v.toFixed(2) },
+      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue', format: (v) => v.toFixed(2) },
+      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue', format: (v) => v.toFixed(2) },
+      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoLength', param: 'torsoLength', valueId: 'torsoLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftUpperArmLength', param: 'leftUpperArmLength', valueId: 'leftUpperArmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftForearmLength', param: 'leftForearmLength', valueId: 'leftForearmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightUpperArmLength', param: 'rightUpperArmLength', valueId: 'rightUpperArmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightForearmLength', param: 'rightForearmLength', valueId: 'rightForearmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftThighLength', param: 'leftThighLength', valueId: 'leftThighLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftCalfLength', param: 'leftCalfLength', valueId: 'leftCalfLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightThighLength', param: 'rightThighLength', valueId: 'rightThighLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightCalfLength', param: 'rightCalfLength', valueId: 'rightCalfLengthValue', format: (v) => v.toFixed(0) }
+    ];
+  }
+
+  private initializeKeyframeInteractions(): void {
+    this.setupKeyframeContextMenu();
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Delete') {
+        return;
+      }
+
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (this.selectedKeyframeTime !== null) {
+        this.deleteKeyframe(this.selectedKeyframeTime);
+      }
+    });
+  }
+
+  private setupKeyframeContextMenu(): void {
+    if (this.keyframeContextMenu) {
+      return;
+    }
+
+    const menu = document.createElement('div');
+    menu.className = 'keyframe-context-menu';
+    menu.innerHTML = '<button type="button" class="context-delete">Delete</button>';
+    menu.style.display = 'none';
+    document.body.appendChild(menu);
+    this.keyframeContextMenu = menu;
+
+    const deleteButton = menu.querySelector('.context-delete') as HTMLButtonElement;
+    deleteButton.addEventListener('click', () => {
+      if (this.contextMenuKeyframeTime !== null) {
+        this.deleteKeyframe(this.contextMenuKeyframeTime);
+      }
+      this.hideKeyframeContextMenu();
+    });
+
+    document.addEventListener('click', () => {
+      this.hideKeyframeContextMenu();
+    });
+
+    document.addEventListener('contextmenu', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target || target.closest('.keyframe-dot')) {
+        return;
+      }
+      this.hideKeyframeContextMenu();
+    });
+
+    window.addEventListener('resize', () => this.hideKeyframeContextMenu());
+    window.addEventListener('scroll', () => this.hideKeyframeContextMenu(), true);
+  }
+
+  private hideKeyframeContextMenu(): void {
+    if (!this.keyframeContextMenu) {
+      return;
+    }
+    this.keyframeContextMenu.style.display = 'none';
+    this.contextMenuKeyframeTime = null;
+  }
+
+  public openKeyframeContextMenu(event: MouseEvent, time: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.keyframeContextMenu) {
+      return;
+    }
+
+    this.selectedKeyframeTime = time;
+    this.contextMenuKeyframeTime = time;
+    this.updateKeyframeList();
+
+    this.keyframeContextMenu.style.display = 'block';
+    const rect = this.keyframeContextMenu.getBoundingClientRect();
+    const padding = 8;
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + rect.width > window.innerWidth - padding) {
+      x = window.innerWidth - rect.width - padding;
+    }
+    if (y + rect.height > window.innerHeight - padding) {
+      y = window.innerHeight - rect.height - padding;
+    }
+
+    this.keyframeContextMenu.style.left = `${Math.max(padding, x)}px`;
+    this.keyframeContextMenu.style.top = `${Math.max(padding, y)}px`;
   }
 
   private loadSelectedAnimation(): void {
@@ -256,15 +403,27 @@ class DuudApp {
       this.currentKeyframes = [];
       this.currentAnimationName = 'My Animation';
       this.selectedKeyframeTime = null;
+      this.currentAnimationLoop = false;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = false;
       this.updateKeyframeList();
       return;
     }
 
     const animation = getAnimationByName(this.selectedAnimation);
     if (animation) {
+      const defaultParams = createDefaultStickFigure(
+        this.stickFigure.getParams().x,
+        this.stickFigure.getParams().y
+      );
       this.currentAnimationName = animation.name;
-      this.currentKeyframes = [...animation.keyframes];
+      this.currentKeyframes = animation.keyframes.map((keyframe) =>
+        this.ensureBoneLengthsInKeyframe(keyframe, defaultParams)
+      );
       this.selectedKeyframeTime = null;
+      this.currentAnimationLoop = animation.loop;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = animation.loop;
       this.updateKeyframeList();
     }
   }
@@ -277,8 +436,19 @@ class DuudApp {
     const keyframe: Keyframe = {
       time,
       params: {
+        x: params.x,
+        y: params.y,
         headTilt: params.headTilt,
         torsoAngle: params.torsoAngle,
+        torsoLength: params.torsoLength,
+        leftUpperArmLength: params.leftUpperArmLength,
+        leftForearmLength: params.leftForearmLength,
+        rightUpperArmLength: params.rightUpperArmLength,
+        rightForearmLength: params.rightForearmLength,
+        leftThighLength: params.leftThighLength,
+        leftCalfLength: params.leftCalfLength,
+        rightThighLength: params.rightThighLength,
+        rightCalfLength: params.rightCalfLength,
         leftShoulderAngle: params.leftShoulderAngle,
         leftElbowAngle: params.leftElbowAngle,
         rightShoulderAngle: params.rightShoulderAngle,
@@ -303,6 +473,27 @@ class DuudApp {
     this.selectedKeyframeTime = time;
 
     this.updateKeyframeList();
+  }
+
+  private ensureBoneLengthsInKeyframe(
+    keyframe: Keyframe,
+    defaults: StickFigureParams
+  ): Keyframe {
+    return {
+      ...keyframe,
+      params: {
+        ...keyframe.params,
+        torsoLength: keyframe.params.torsoLength ?? defaults.torsoLength,
+        leftUpperArmLength: keyframe.params.leftUpperArmLength ?? defaults.leftUpperArmLength,
+        leftForearmLength: keyframe.params.leftForearmLength ?? defaults.leftForearmLength,
+        rightUpperArmLength: keyframe.params.rightUpperArmLength ?? defaults.rightUpperArmLength,
+        rightForearmLength: keyframe.params.rightForearmLength ?? defaults.rightForearmLength,
+        leftThighLength: keyframe.params.leftThighLength ?? defaults.leftThighLength,
+        leftCalfLength: keyframe.params.leftCalfLength ?? defaults.leftCalfLength,
+        rightThighLength: keyframe.params.rightThighLength ?? defaults.rightThighLength,
+        rightCalfLength: keyframe.params.rightCalfLength ?? defaults.rightCalfLength
+      }
+    };
   }
 
   public deleteKeyframe(time: number): void {
@@ -367,10 +558,10 @@ class DuudApp {
       return `
         <div class="keyframe-dot${isSelected ? ' selected' : ''}"
              style="left: ${position}%"
-             onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
+             onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})"
+             oncontextmenu="window.duudApp.openKeyframeContextMenu(event, ${kf.time})">
           <div class="keyframe-tooltip">
             <span class="time">${kf.time.toFixed(2)}s</span>
-            <span class="delete-btn" onclick="event.stopPropagation(); window.duudApp.deleteKeyframe(${kf.time})">Delete</span>
           </div>
         </div>
       `;
@@ -395,8 +586,46 @@ class DuudApp {
     const name = prompt('Enter animation name:', 'My Animation');
     if (name) {
       this.currentAnimationName = name;
-      this.currentKeyframes = [];
-      this.selectedKeyframeTime = null; // Clear selection for new animation
+      this.currentAnimationLoop = false;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = false;
+      const currentParams = this.stickFigure.getParams();
+      const defaultParams = createDefaultStickFigure(currentParams.x, currentParams.y);
+      this.stickFigure.setParams(defaultParams);
+      this.updatePoseEditorFromStickFigure();
+      this.drawFrame();
+
+      const defaultKeyframe: Keyframe = {
+        time: 0,
+        params: {
+          x: defaultParams.x,
+          y: defaultParams.y,
+          headTilt: defaultParams.headTilt,
+          torsoAngle: defaultParams.torsoAngle,
+          torsoLength: defaultParams.torsoLength,
+          leftUpperArmLength: defaultParams.leftUpperArmLength,
+          leftForearmLength: defaultParams.leftForearmLength,
+          rightUpperArmLength: defaultParams.rightUpperArmLength,
+          rightForearmLength: defaultParams.rightForearmLength,
+          leftThighLength: defaultParams.leftThighLength,
+          leftCalfLength: defaultParams.leftCalfLength,
+          rightThighLength: defaultParams.rightThighLength,
+          rightCalfLength: defaultParams.rightCalfLength,
+          leftShoulderAngle: defaultParams.leftShoulderAngle,
+          leftElbowAngle: defaultParams.leftElbowAngle,
+          rightShoulderAngle: defaultParams.rightShoulderAngle,
+          rightElbowAngle: defaultParams.rightElbowAngle,
+          leftHipAngle: defaultParams.leftHipAngle,
+          leftKneeAngle: defaultParams.leftKneeAngle,
+          rightHipAngle: defaultParams.rightHipAngle,
+          rightKneeAngle: defaultParams.rightKneeAngle
+        }
+      };
+
+      this.currentKeyframes = [defaultKeyframe];
+      this.selectedKeyframeTime = 0;
+      const timeInput = document.getElementById('keyframeTime') as HTMLInputElement;
+      timeInput.value = '0';
       this.updateKeyframeList();
       alert(`New animation "${name}" created! Start adding keyframes.`);
     }
@@ -413,7 +642,7 @@ class DuudApp {
       name: this.currentAnimationName,
       duration,
       keyframes: this.currentKeyframes,
-      loop: confirm('Should this animation loop?')
+      loop: this.currentAnimationLoop
     };
 
     // Check if animation with this name already exists
@@ -441,10 +670,44 @@ class DuudApp {
   }
 
   private playAnimation(): void {
-    const animation = getAnimationByName(this.selectedAnimation);
-    if (animation) {
-      this.animator.play(animation);
+    if (
+      !this.animator.isAnimating() &&
+      this.animator.getCurrentAnimation() &&
+      this.animator.getCurrentTime() > 0
+    ) {
+      const currentAnimation = this.animator.getCurrentAnimation();
+      const targetName =
+        this.currentKeyframes.length === 0
+          ? this.selectedAnimation
+          : this.currentAnimationName;
+      if (currentAnimation?.name === targetName) {
+        this.animator.resume();
+        return;
+      }
     }
+
+    if (this.currentKeyframes.length === 0) {
+      const animation = getAnimationByName(this.selectedAnimation);
+      if (animation) {
+        this.animator.play(animation);
+        return;
+      }
+
+      alert('Please add at least one keyframe to play.');
+      return;
+    }
+
+    const sortedKeyframes = [...this.currentKeyframes].sort((a, b) => a.time - b.time);
+    const maxTime = Math.max(...sortedKeyframes.map(kf => kf.time));
+    const selectedAnimation = getAnimationByName(this.selectedAnimation);
+    const animation: Animation = {
+      name: this.currentAnimationName,
+      duration: maxTime,
+      keyframes: sortedKeyframes,
+      loop: this.currentAnimationLoop ?? selectedAnimation?.loop ?? false
+    };
+
+    this.animator.play(animation);
   }
 
   private startRenderLoop(): void {
@@ -460,6 +723,14 @@ class DuudApp {
     // Clear canvas
     this.ctx.fillStyle = '#ffffff';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Draw floor reference line
+    this.ctx.strokeStyle = '#c7c7c7';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, this.floorY);
+    this.ctx.lineTo(this.canvas.width, this.floorY);
+    this.ctx.stroke();
 
     // Draw stick figure
     this.stickFigure.draw(this.ctx);
