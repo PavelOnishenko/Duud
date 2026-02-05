@@ -17,6 +17,8 @@ class DuudApp {
   private poseEditorEnabled: boolean = true;
   private selectedKeyframeTime: number | null = null;
   private currentAnimationLoop: boolean = false;
+  private keyframeContextMenu: HTMLDivElement | null = null;
+  private contextMenuKeyframeTime: number | null = null;
 
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -35,6 +37,7 @@ class DuudApp {
     this.loadSavedAnimations();
     this.initializeUI();
     this.initializePoseEditor();
+    this.initializeKeyframeInteractions();
     this.loadSelectedAnimation();
     this.startRenderLoop();
     this.drawFrame();
@@ -295,6 +298,102 @@ class DuudApp {
     });
   }
 
+  private initializeKeyframeInteractions(): void {
+    this.setupKeyframeContextMenu();
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Delete') {
+        return;
+      }
+
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (this.selectedKeyframeTime !== null) {
+        this.deleteKeyframe(this.selectedKeyframeTime);
+      }
+    });
+  }
+
+  private setupKeyframeContextMenu(): void {
+    if (this.keyframeContextMenu) {
+      return;
+    }
+
+    const menu = document.createElement('div');
+    menu.className = 'keyframe-context-menu';
+    menu.innerHTML = '<button type="button" class="context-delete">Delete</button>';
+    menu.style.display = 'none';
+    document.body.appendChild(menu);
+    this.keyframeContextMenu = menu;
+
+    const deleteButton = menu.querySelector('.context-delete') as HTMLButtonElement;
+    deleteButton.addEventListener('click', () => {
+      if (this.contextMenuKeyframeTime !== null) {
+        this.deleteKeyframe(this.contextMenuKeyframeTime);
+      }
+      this.hideKeyframeContextMenu();
+    });
+
+    document.addEventListener('click', () => {
+      this.hideKeyframeContextMenu();
+    });
+
+    document.addEventListener('contextmenu', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target || target.closest('.keyframe-dot')) {
+        return;
+      }
+      this.hideKeyframeContextMenu();
+    });
+
+    window.addEventListener('resize', () => this.hideKeyframeContextMenu());
+    window.addEventListener('scroll', () => this.hideKeyframeContextMenu(), true);
+  }
+
+  private hideKeyframeContextMenu(): void {
+    if (!this.keyframeContextMenu) {
+      return;
+    }
+    this.keyframeContextMenu.style.display = 'none';
+    this.contextMenuKeyframeTime = null;
+  }
+
+  public openKeyframeContextMenu(event: MouseEvent, time: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.keyframeContextMenu) {
+      return;
+    }
+
+    this.selectedKeyframeTime = time;
+    this.contextMenuKeyframeTime = time;
+    this.updateKeyframeList();
+
+    this.keyframeContextMenu.style.display = 'block';
+    const rect = this.keyframeContextMenu.getBoundingClientRect();
+    const padding = 8;
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + rect.width > window.innerWidth - padding) {
+      x = window.innerWidth - rect.width - padding;
+    }
+    if (y + rect.height > window.innerHeight - padding) {
+      y = window.innerHeight - rect.height - padding;
+    }
+
+    this.keyframeContextMenu.style.left = `${Math.max(padding, x)}px`;
+    this.keyframeContextMenu.style.top = `${Math.max(padding, y)}px`;
+  }
+
   private loadSelectedAnimation(): void {
     if (!this.selectedAnimation) {
       this.currentKeyframes = [];
@@ -420,10 +519,10 @@ class DuudApp {
       return `
         <div class="keyframe-dot${isSelected ? ' selected' : ''}"
              style="left: ${position}%"
-             onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})">
+             onclick="window.duudApp.loadKeyframeIntoPose(${kf.time})"
+             oncontextmenu="window.duudApp.openKeyframeContextMenu(event, ${kf.time})">
           <div class="keyframe-tooltip">
             <span class="time">${kf.time.toFixed(2)}s</span>
-            <span class="delete-btn" onclick="event.stopPropagation(); window.duudApp.deleteKeyframe(${kf.time})">Delete</span>
           </div>
         </div>
       `;
