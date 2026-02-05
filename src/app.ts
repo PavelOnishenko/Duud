@@ -15,6 +15,7 @@ class DuudApp {
   private currentAnimationName: string = 'My Animation';
   private poseEditorEnabled: boolean = true;
   private selectedKeyframeTime: number | null = null;
+  private currentAnimationLoop: boolean = false;
 
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -107,6 +108,7 @@ class DuudApp {
     const speedSlider = document.getElementById('speedSlider') as HTMLInputElement;
     const speedValue = document.getElementById('speedValue') as HTMLSpanElement;
     const renderBtn = document.getElementById('renderBtn') as HTMLButtonElement;
+    const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
 
     // Populate animation dropdown with all animations
     this.populateAnimationDropdown();
@@ -156,6 +158,10 @@ class DuudApp {
     deleteAnimationBtn.addEventListener('click', () => {
       this.deleteSelectedAnimation();
     });
+
+    loopToggle.addEventListener('change', () => {
+      this.currentAnimationLoop = loopToggle.checked;
+    });
   }
 
   private deleteSelectedAnimation(): void {
@@ -184,6 +190,9 @@ class DuudApp {
         this.selectedAnimation = '';
         this.currentKeyframes = [];
         this.currentAnimationName = 'My Animation';
+        this.currentAnimationLoop = false;
+        const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+        loopToggle.checked = false;
         this.updateKeyframeList();
       }
     }
@@ -256,6 +265,9 @@ class DuudApp {
       this.currentKeyframes = [];
       this.currentAnimationName = 'My Animation';
       this.selectedKeyframeTime = null;
+      this.currentAnimationLoop = false;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = false;
       this.updateKeyframeList();
       return;
     }
@@ -265,6 +277,9 @@ class DuudApp {
       this.currentAnimationName = animation.name;
       this.currentKeyframes = [...animation.keyframes];
       this.selectedKeyframeTime = null;
+      this.currentAnimationLoop = animation.loop;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = animation.loop;
       this.updateKeyframeList();
     }
   }
@@ -395,6 +410,9 @@ class DuudApp {
     const name = prompt('Enter animation name:', 'My Animation');
     if (name) {
       this.currentAnimationName = name;
+      this.currentAnimationLoop = false;
+      const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
+      loopToggle.checked = false;
       const currentParams = this.stickFigure.getParams();
       const defaultParams = createDefaultStickFigure(currentParams.x, currentParams.y);
       this.stickFigure.setParams(defaultParams);
@@ -437,7 +455,7 @@ class DuudApp {
       name: this.currentAnimationName,
       duration,
       keyframes: this.currentKeyframes,
-      loop: confirm('Should this animation loop?')
+      loop: this.currentAnimationLoop
     };
 
     // Check if animation with this name already exists
@@ -499,7 +517,7 @@ class DuudApp {
       name: this.currentAnimationName,
       duration: maxTime,
       keyframes: sortedKeyframes,
-      loop: selectedAnimation?.loop ?? false
+      loop: this.currentAnimationLoop ?? selectedAnimation?.loop ?? false
     };
 
     this.animator.play(animation);
