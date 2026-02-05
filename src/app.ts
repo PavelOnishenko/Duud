@@ -395,8 +395,32 @@ class DuudApp {
     const name = prompt('Enter animation name:', 'My Animation');
     if (name) {
       this.currentAnimationName = name;
-      this.currentKeyframes = [];
-      this.selectedKeyframeTime = null; // Clear selection for new animation
+      const currentParams = this.stickFigure.getParams();
+      const defaultParams = createDefaultStickFigure(currentParams.x, currentParams.y);
+      this.stickFigure.setParams(defaultParams);
+      this.updatePoseEditorFromStickFigure();
+      this.drawFrame();
+
+      const defaultKeyframe: Keyframe = {
+        time: 0,
+        params: {
+          headTilt: defaultParams.headTilt,
+          torsoAngle: defaultParams.torsoAngle,
+          leftShoulderAngle: defaultParams.leftShoulderAngle,
+          leftElbowAngle: defaultParams.leftElbowAngle,
+          rightShoulderAngle: defaultParams.rightShoulderAngle,
+          rightElbowAngle: defaultParams.rightElbowAngle,
+          leftHipAngle: defaultParams.leftHipAngle,
+          leftKneeAngle: defaultParams.leftKneeAngle,
+          rightHipAngle: defaultParams.rightHipAngle,
+          rightKneeAngle: defaultParams.rightKneeAngle
+        }
+      };
+
+      this.currentKeyframes = [defaultKeyframe];
+      this.selectedKeyframeTime = 0;
+      const timeInput = document.getElementById('keyframeTime') as HTMLInputElement;
+      timeInput.value = '0';
       this.updateKeyframeList();
       alert(`New animation "${name}" created! Start adding keyframes.`);
     }
