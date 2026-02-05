@@ -277,6 +277,18 @@ canvas {
   font-size: 11px;
 }
 
+.checkbox-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #d4d4d4;
+}
+
+.checkbox-control input[type="checkbox"] {
+  accent-color: #0e639c;
+}
+
 /* Timeline Panel */
 .keyframes-panel {
   background: #252526;
