@@ -8,7 +8,7 @@ class DuudApp {
   private stickFigure: StickFigure;
   private animator: Animator;
   private animationFrameId: number | null = null;
-  private selectedAnimation: string = 'Punch';
+  private selectedAnimation: string = '';
 
   // Pose editor state
   private currentKeyframes: Keyframe[] = [];
@@ -40,27 +40,15 @@ class DuudApp {
 
   private loadSavedAnimations(): void {
     try {
-      // Load list of deleted animations and remove them from ANIMATIONS
-      const deletedJson = localStorage.getItem('duud_deleted_animations');
-      if (deletedJson) {
-        const deletedNames: string[] = JSON.parse(deletedJson);
-        // Remove deleted animations from the built-in array
-        for (let i = ANIMATIONS.length - 1; i >= 0; i--) {
-          if (deletedNames.includes(ANIMATIONS[i].name)) {
-            ANIMATIONS.splice(i, 1);
-          }
-        }
-      }
-
       const saved = localStorage.getItem('duud_animations');
       if (saved) {
         const savedAnimations: Animation[] = JSON.parse(saved);
         savedAnimations.forEach(anim => {
-          // Only add if not already in ANIMATIONS
-          if (!ANIMATIONS.find(a => a.name === anim.name)) {
-            ANIMATIONS.push(anim);
-          }
+          ANIMATIONS.push(anim);
         });
+        if (ANIMATIONS.length > 0) {
+          this.selectedAnimation = ANIMATIONS[0].name;
+        }
       }
     } catch (e) {
       console.error('Failed to load saved animations:', e);
@@ -79,35 +67,6 @@ class DuudApp {
       localStorage.setItem('duud_animations', JSON.stringify(animationsToSave));
     } catch (e) {
       console.error('Failed to save animations:', e);
-    }
-  }
-
-  private addToDeletedAnimations(name: string): void {
-    try {
-      const deletedJson = localStorage.getItem('duud_deleted_animations');
-      const deleted: string[] = deletedJson ? JSON.parse(deletedJson) : [];
-      if (!deleted.includes(name)) {
-        deleted.push(name);
-        localStorage.setItem('duud_deleted_animations', JSON.stringify(deleted));
-      }
-    } catch (e) {
-      console.error('Failed to save deleted animation:', e);
-    }
-  }
-
-  private removeFromDeletedAnimations(name: string): void {
-    try {
-      const deletedJson = localStorage.getItem('duud_deleted_animations');
-      if (deletedJson) {
-        const deleted: string[] = JSON.parse(deletedJson);
-        const index = deleted.indexOf(name);
-        if (index >= 0) {
-          deleted.splice(index, 1);
-          localStorage.setItem('duud_deleted_animations', JSON.stringify(deleted));
-        }
-      }
-    } catch (e) {
-      console.error('Failed to update deleted animations:', e);
     }
   }
 
@@ -162,9 +121,6 @@ class DuudApp {
 
     // Remove from ANIMATIONS array
     ANIMATIONS.splice(index, 1);
-
-    // Track deleted animation name in localStorage
-    this.addToDeletedAnimations(name);
 
     // Save to localStorage
     this.saveAnimationsToStorage();
@@ -463,9 +419,6 @@ class DuudApp {
       // Add new animation
       ANIMATIONS.push(animation);
     }
-
-    // Remove from deleted list if it was previously deleted
-    this.removeFromDeletedAnimations(animation.name);
 
     // Save to localStorage
     this.saveAnimationsToStorage();
