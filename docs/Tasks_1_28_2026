@@ -5,9 +5,9 @@ DONE When we just clicked new animation button the figure should be in some defa
 DONE When we create new animation, the first keyframe should be added by default with default sliders position and at 0 time.
 DONE Play button should resume playback from moment that was paused by pause button.
 DONE Checkbox for Looped to edit
-INPRO Show ground level
-INPRO Move entire body
+DONE Show ground level
+DONE Move entire body
 INPRO Resize bones
-Edit keyframes
-Delete keyframes 
+DONE Edit keyframes
+INPRO Delete keyframes 
 Importing to game
