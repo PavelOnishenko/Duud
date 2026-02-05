@@ -190,8 +190,12 @@ class DuudApp {
   }
 
   private initializePoseEditor(): void {
+    const defaultFormat = (value: number): string => value.toFixed(2);
+
     // Joint angle sliders
     const sliders = [
+      { id: 'bodyX', param: 'x', valueId: 'bodyXValue', format: (value: number) => value.toFixed(0) },
+      { id: 'bodyY', param: 'y', valueId: 'bodyYValue', format: (value: number) => value.toFixed(0) },
       { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue' },
       { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue' },
       { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue' },
@@ -204,14 +208,15 @@ class DuudApp {
       { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue' }
     ];
 
-    sliders.forEach(({ id, param, valueId }) => {
+    sliders.forEach(({ id, param, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
+      const formatValue = format ?? defaultFormat;
 
       slider.addEventListener('input', () => {
         if (this.poseEditorEnabled) {
           const value = parseFloat(slider.value);
-          valueDisplay.textContent = value.toFixed(2);
+          valueDisplay.textContent = formatValue(value);
           this.stickFigure.setParams({ [param]: value } as Partial<StickFigureParams>);
           this.drawFrame();
         }
@@ -231,6 +236,8 @@ class DuudApp {
   private updatePoseEditorFromStickFigure(): void {
     const params = this.stickFigure.getParams();
     const updates = [
+      { id: 'bodyX', value: params.x, valueId: 'bodyXValue', format: (value: number) => value.toFixed(0) },
+      { id: 'bodyY', value: params.y, valueId: 'bodyYValue', format: (value: number) => value.toFixed(0) },
       { id: 'headTilt', value: params.headTilt, valueId: 'headTiltValue' },
       { id: 'torsoAngle', value: params.torsoAngle, valueId: 'torsoAngleValue' },
       { id: 'leftShoulder', value: params.leftShoulderAngle, valueId: 'leftShoulderValue' },
@@ -243,11 +250,12 @@ class DuudApp {
       { id: 'rightKnee', value: params.rightKneeAngle, valueId: 'rightKneeValue' }
     ];
 
-    updates.forEach(({ id, value, valueId }) => {
+    updates.forEach(({ id, value, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
+      const formatValue = format ?? ((num: number) => num.toFixed(2));
       slider.value = value.toString();
-      valueDisplay.textContent = value.toFixed(2);
+      valueDisplay.textContent = formatValue(value);
     });
   }
 
@@ -277,6 +285,8 @@ class DuudApp {
     const keyframe: Keyframe = {
       time,
       params: {
+        x: params.x,
+        y: params.y,
         headTilt: params.headTilt,
         torsoAngle: params.torsoAngle,
         leftShoulderAngle: params.leftShoulderAngle,
@@ -404,6 +414,8 @@ class DuudApp {
       const defaultKeyframe: Keyframe = {
         time: 0,
         params: {
+          x: defaultParams.x,
+          y: defaultParams.y,
           headTilt: defaultParams.headTilt,
           torsoAngle: defaultParams.torsoAngle,
           leftShoulderAngle: defaultParams.leftShoulderAngle,
