@@ -1,4 +1,4 @@
-Delete animations
+DONE Delete animations
 Playback controls now work only when animation is saved. They should work before saving. I wanna know what I save.
 Stop button should move playback cursor to the beginning of the animation. Figure should be in corresponding position after the click. 
 When we just clicked new animation button the figure should be in some default state.
