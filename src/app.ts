@@ -285,8 +285,14 @@ class DuudApp {
 
     const animation = getAnimationByName(this.selectedAnimation);
     if (animation) {
+      const defaultParams = createDefaultStickFigure(
+        this.stickFigure.getParams().x,
+        this.stickFigure.getParams().y
+      );
       this.currentAnimationName = animation.name;
-      this.currentKeyframes = [...animation.keyframes];
+      this.currentKeyframes = animation.keyframes.map((keyframe) =>
+        this.ensureBoneLengthsInKeyframe(keyframe, defaultParams)
+      );
       this.selectedKeyframeTime = null;
       this.currentAnimationLoop = animation.loop;
       const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
@@ -338,6 +344,27 @@ class DuudApp {
     this.selectedKeyframeTime = time;
 
     this.updateKeyframeList();
+  }
+
+  private ensureBoneLengthsInKeyframe(
+    keyframe: Keyframe,
+    defaults: StickFigureParams
+  ): Keyframe {
+    return {
+      ...keyframe,
+      params: {
+        ...keyframe.params,
+        torsoLength: keyframe.params.torsoLength ?? defaults.torsoLength,
+        leftUpperArmLength: keyframe.params.leftUpperArmLength ?? defaults.leftUpperArmLength,
+        leftForearmLength: keyframe.params.leftForearmLength ?? defaults.leftForearmLength,
+        rightUpperArmLength: keyframe.params.rightUpperArmLength ?? defaults.rightUpperArmLength,
+        rightForearmLength: keyframe.params.rightForearmLength ?? defaults.rightForearmLength,
+        leftThighLength: keyframe.params.leftThighLength ?? defaults.leftThighLength,
+        leftCalfLength: keyframe.params.leftCalfLength ?? defaults.leftCalfLength,
+        rightThighLength: keyframe.params.rightThighLength ?? defaults.rightThighLength,
+        rightCalfLength: keyframe.params.rightCalfLength ?? defaults.rightCalfLength
+      }
+    };
   }
 
   public deleteKeyframe(time: number): void {
