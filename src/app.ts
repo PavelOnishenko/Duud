@@ -203,23 +203,7 @@ class DuudApp {
   }
 
   private initializePoseEditor(): void {
-    const defaultFormat = (value: number): string => value.toFixed(2);
-
-    // Joint angle sliders
-    const sliders = [
-      { id: 'bodyX', param: 'x', valueId: 'bodyXValue', format: (value: number) => value.toFixed(0) },
-      { id: 'bodyY', param: 'y', valueId: 'bodyYValue', format: (value: number) => value.toFixed(0) },
-      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue' },
-      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue' },
-      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue' },
-      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue' },
-      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue' },
-      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue' }
-    ];
+    const sliders = this.getPoseSliderConfigs();
 
     sliders.forEach(({ id, param, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
@@ -229,7 +213,7 @@ class DuudApp {
       slider.addEventListener('input', () => {
         if (this.poseEditorEnabled) {
           const value = parseFloat(slider.value);
-          valueDisplay.textContent = formatValue(value);
+          valueDisplay.textContent = format(value);
           this.stickFigure.setParams({ [param]: value } as Partial<StickFigureParams>);
           this.drawFrame();
         }
@@ -274,20 +258,12 @@ class DuudApp {
 
   private updatePoseEditorFromStickFigure(): void {
     const params = this.stickFigure.getParams();
-    const updates = [
-      { id: 'bodyX', value: params.x, valueId: 'bodyXValue', format: (value: number) => value.toFixed(0) },
-      { id: 'bodyY', value: params.y, valueId: 'bodyYValue', format: (value: number) => value.toFixed(0) },
-      { id: 'headTilt', value: params.headTilt, valueId: 'headTiltValue' },
-      { id: 'torsoAngle', value: params.torsoAngle, valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', value: params.leftShoulderAngle, valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', value: params.leftElbowAngle, valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', value: params.rightShoulderAngle, valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', value: params.rightElbowAngle, valueId: 'rightElbowValue' },
-      { id: 'leftHip', value: params.leftHipAngle, valueId: 'leftHipValue' },
-      { id: 'leftKnee', value: params.leftKneeAngle, valueId: 'leftKneeValue' },
-      { id: 'rightHip', value: params.rightHipAngle, valueId: 'rightHipValue' },
-      { id: 'rightKnee', value: params.rightKneeAngle, valueId: 'rightKneeValue' }
-    ];
+    const updates = this.getPoseSliderConfigs().map(({ id, param, valueId, format }) => ({
+      id,
+      valueId,
+      value: params[param] as number,
+      format
+    }));
 
     updates.forEach(({ id, value, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
@@ -297,6 +273,34 @@ class DuudApp {
       valueDisplay.textContent = formatValue(value);
     });
   }
+  
+   private getPoseSliderConfigs(): Array<{
+    id: string;
+    param: keyof StickFigureParams;
+    valueId: string;
+    format: (value: number) => string;
+  }> {
+    return [
+      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue', format: (v) => v.toFixed(2) },
+      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue', format: (v) => v.toFixed(2) },
+      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue', format: (v) => v.toFixed(2) },
+      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoLength', param: 'torsoLength', valueId: 'torsoLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftUpperArmLength', param: 'leftUpperArmLength', valueId: 'leftUpperArmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftForearmLength', param: 'leftForearmLength', valueId: 'leftForearmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightUpperArmLength', param: 'rightUpperArmLength', valueId: 'rightUpperArmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightForearmLength', param: 'rightForearmLength', valueId: 'rightForearmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftThighLength', param: 'leftThighLength', valueId: 'leftThighLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'leftCalfLength', param: 'leftCalfLength', valueId: 'leftCalfLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightThighLength', param: 'rightThighLength', valueId: 'rightThighLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'rightCalfLength', param: 'rightCalfLength', valueId: 'rightCalfLengthValue', format: (v) => v.toFixed(0) }
+    ];
 
   private initializeKeyframeInteractions(): void {
     this.setupKeyframeContextMenu();
@@ -408,9 +412,14 @@ class DuudApp {
 
     const animation = getAnimationByName(this.selectedAnimation);
     if (animation) {
+      const defaultParams = createDefaultStickFigure(
+        this.stickFigure.getParams().x,
+        this.stickFigure.getParams().y
+      );
       this.currentAnimationName = animation.name;
-      const fallbackParams = this.stickFigure.getParams();
-      this.currentKeyframes = this.normalizeKeyframes(animation.keyframes, fallbackParams);
+      this.currentKeyframes = animation.keyframes.map((keyframe) =>
+        this.ensureBoneLengthsInKeyframe(keyframe, defaultParams)
+      );
       this.selectedKeyframeTime = null;
       this.currentAnimationLoop = animation.loop;
       const loopToggle = document.getElementById('loopToggle') as HTMLInputElement;
@@ -431,6 +440,15 @@ class DuudApp {
         y: params.y,
         headTilt: params.headTilt,
         torsoAngle: params.torsoAngle,
+        torsoLength: params.torsoLength,
+        leftUpperArmLength: params.leftUpperArmLength,
+        leftForearmLength: params.leftForearmLength,
+        rightUpperArmLength: params.rightUpperArmLength,
+        rightForearmLength: params.rightForearmLength,
+        leftThighLength: params.leftThighLength,
+        leftCalfLength: params.leftCalfLength,
+        rightThighLength: params.rightThighLength,
+        rightCalfLength: params.rightCalfLength,
         leftShoulderAngle: params.leftShoulderAngle,
         leftElbowAngle: params.leftElbowAngle,
         rightShoulderAngle: params.rightShoulderAngle,
@@ -455,6 +473,27 @@ class DuudApp {
     this.selectedKeyframeTime = time;
 
     this.updateKeyframeList();
+  }
+
+  private ensureBoneLengthsInKeyframe(
+    keyframe: Keyframe,
+    defaults: StickFigureParams
+  ): Keyframe {
+    return {
+      ...keyframe,
+      params: {
+        ...keyframe.params,
+        torsoLength: keyframe.params.torsoLength ?? defaults.torsoLength,
+        leftUpperArmLength: keyframe.params.leftUpperArmLength ?? defaults.leftUpperArmLength,
+        leftForearmLength: keyframe.params.leftForearmLength ?? defaults.leftForearmLength,
+        rightUpperArmLength: keyframe.params.rightUpperArmLength ?? defaults.rightUpperArmLength,
+        rightForearmLength: keyframe.params.rightForearmLength ?? defaults.rightForearmLength,
+        leftThighLength: keyframe.params.leftThighLength ?? defaults.leftThighLength,
+        leftCalfLength: keyframe.params.leftCalfLength ?? defaults.leftCalfLength,
+        rightThighLength: keyframe.params.rightThighLength ?? defaults.rightThighLength,
+        rightCalfLength: keyframe.params.rightCalfLength ?? defaults.rightCalfLength
+      }
+    };
   }
 
   public deleteKeyframe(time: number): void {
@@ -563,6 +602,15 @@ class DuudApp {
           y: defaultParams.y,
           headTilt: defaultParams.headTilt,
           torsoAngle: defaultParams.torsoAngle,
+          torsoLength: defaultParams.torsoLength,
+          leftUpperArmLength: defaultParams.leftUpperArmLength,
+          leftForearmLength: defaultParams.leftForearmLength,
+          rightUpperArmLength: defaultParams.rightUpperArmLength,
+          rightForearmLength: defaultParams.rightForearmLength,
+          leftThighLength: defaultParams.leftThighLength,
+          leftCalfLength: defaultParams.leftCalfLength,
+          rightThighLength: defaultParams.rightThighLength,
+          rightCalfLength: defaultParams.rightCalfLength,
           leftShoulderAngle: defaultParams.leftShoulderAngle,
           leftElbowAngle: defaultParams.leftElbowAngle,
           rightShoulderAngle: defaultParams.rightShoulderAngle,
