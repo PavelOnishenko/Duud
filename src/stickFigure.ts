@@ -8,6 +8,13 @@ export interface StickFigureParams {
   neckAngle: number;
   torsoAngle: number;
 
+  // Bone lengths (base units)
+  torsoLength: number;
+  upperArmLength: number;
+  forearmLength: number;
+  thighLength: number;
+  calfLength: number;
+
   // Arms
   leftShoulderAngle: number;
   leftElbowAngle: number;
@@ -35,6 +42,11 @@ export function createDefaultStickFigure(x: number = 400, y: number = 300): Stic
     headTilt: 0,
     neckAngle: 0,
     torsoAngle: 0,
+    torsoLength: 50,
+    upperArmLength: 35,
+    forearmLength: 30,
+    thighLength: 40,
+    calfLength: 35,
     leftShoulderAngle: Math.PI / 4,
     leftElbowAngle: Math.PI / 6,
     rightShoulderAngle: -Math.PI / 4,
@@ -74,11 +86,11 @@ export class StickFigure {
 
     // Base measurements (scaled)
     const headRadius = 15 * s;
-    const torsoLength = 50 * s;
-    const upperArmLength = 35 * s;
-    const forearmLength = 30 * s;
-    const thighLength = 40 * s;
-    const calfLength = 35 * s;
+    const torsoLength = p.torsoLength * s;
+    const upperArmLength = p.upperArmLength * s;
+    const forearmLength = p.forearmLength * s;
+    const thighLength = p.thighLength * s;
+    const calfLength = p.calfLength * s;
 
     // Head
     ctx.fillStyle = p.headColor;

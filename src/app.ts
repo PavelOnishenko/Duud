@@ -199,28 +199,16 @@ class DuudApp {
   }
 
   private initializePoseEditor(): void {
-    // Joint angle sliders
-    const sliders = [
-      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue' },
-      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue' },
-      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue' },
-      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue' },
-      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue' },
-      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue' }
-    ];
+    const sliders = this.getPoseSliderConfigs();
 
-    sliders.forEach(({ id, param, valueId }) => {
+    sliders.forEach(({ id, param, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
 
       slider.addEventListener('input', () => {
         if (this.poseEditorEnabled) {
           const value = parseFloat(slider.value);
-          valueDisplay.textContent = value.toFixed(2);
+          valueDisplay.textContent = format(value);
           this.stickFigure.setParams({ [param]: value } as Partial<StickFigureParams>);
           this.drawFrame();
         }
@@ -239,25 +227,44 @@ class DuudApp {
 
   private updatePoseEditorFromStickFigure(): void {
     const params = this.stickFigure.getParams();
-    const updates = [
-      { id: 'headTilt', value: params.headTilt, valueId: 'headTiltValue' },
-      { id: 'torsoAngle', value: params.torsoAngle, valueId: 'torsoAngleValue' },
-      { id: 'leftShoulder', value: params.leftShoulderAngle, valueId: 'leftShoulderValue' },
-      { id: 'leftElbow', value: params.leftElbowAngle, valueId: 'leftElbowValue' },
-      { id: 'rightShoulder', value: params.rightShoulderAngle, valueId: 'rightShoulderValue' },
-      { id: 'rightElbow', value: params.rightElbowAngle, valueId: 'rightElbowValue' },
-      { id: 'leftHip', value: params.leftHipAngle, valueId: 'leftHipValue' },
-      { id: 'leftKnee', value: params.leftKneeAngle, valueId: 'leftKneeValue' },
-      { id: 'rightHip', value: params.rightHipAngle, valueId: 'rightHipValue' },
-      { id: 'rightKnee', value: params.rightKneeAngle, valueId: 'rightKneeValue' }
-    ];
+    const updates = this.getPoseSliderConfigs().map(({ id, param, valueId, format }) => ({
+      id,
+      valueId,
+      value: params[param] as number,
+      format
+    }));
 
-    updates.forEach(({ id, value, valueId }) => {
+    updates.forEach(({ id, value, valueId, format }) => {
       const slider = document.getElementById(id) as HTMLInputElement;
       const valueDisplay = document.getElementById(valueId) as HTMLSpanElement;
       slider.value = value.toString();
-      valueDisplay.textContent = value.toFixed(2);
+      valueDisplay.textContent = format(value);
     });
+  }
+
+  private getPoseSliderConfigs(): Array<{
+    id: string;
+    param: keyof StickFigureParams;
+    valueId: string;
+    format: (value: number) => string;
+  }> {
+    return [
+      { id: 'headTilt', param: 'headTilt', valueId: 'headTiltValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoAngle', param: 'torsoAngle', valueId: 'torsoAngleValue', format: (v) => v.toFixed(2) },
+      { id: 'leftShoulder', param: 'leftShoulderAngle', valueId: 'leftShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'leftElbow', param: 'leftElbowAngle', valueId: 'leftElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'rightShoulder', param: 'rightShoulderAngle', valueId: 'rightShoulderValue', format: (v) => v.toFixed(2) },
+      { id: 'rightElbow', param: 'rightElbowAngle', valueId: 'rightElbowValue', format: (v) => v.toFixed(2) },
+      { id: 'leftHip', param: 'leftHipAngle', valueId: 'leftHipValue', format: (v) => v.toFixed(2) },
+      { id: 'leftKnee', param: 'leftKneeAngle', valueId: 'leftKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'rightHip', param: 'rightHipAngle', valueId: 'rightHipValue', format: (v) => v.toFixed(2) },
+      { id: 'rightKnee', param: 'rightKneeAngle', valueId: 'rightKneeValue', format: (v) => v.toFixed(2) },
+      { id: 'torsoLength', param: 'torsoLength', valueId: 'torsoLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'upperArmLength', param: 'upperArmLength', valueId: 'upperArmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'forearmLength', param: 'forearmLength', valueId: 'forearmLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'thighLength', param: 'thighLength', valueId: 'thighLengthValue', format: (v) => v.toFixed(0) },
+      { id: 'calfLength', param: 'calfLength', valueId: 'calfLengthValue', format: (v) => v.toFixed(0) }
+    ];
   }
 
   private loadSelectedAnimation(): void {
@@ -294,6 +301,11 @@ class DuudApp {
       params: {
         headTilt: params.headTilt,
         torsoAngle: params.torsoAngle,
+        torsoLength: params.torsoLength,
+        upperArmLength: params.upperArmLength,
+        forearmLength: params.forearmLength,
+        thighLength: params.thighLength,
+        calfLength: params.calfLength,
         leftShoulderAngle: params.leftShoulderAngle,
         leftElbowAngle: params.leftElbowAngle,
         rightShoulderAngle: params.rightShoulderAngle,
@@ -424,6 +436,11 @@ class DuudApp {
         params: {
           headTilt: defaultParams.headTilt,
           torsoAngle: defaultParams.torsoAngle,
+          torsoLength: defaultParams.torsoLength,
+          upperArmLength: defaultParams.upperArmLength,
+          forearmLength: defaultParams.forearmLength,
+          thighLength: defaultParams.thighLength,
+          calfLength: defaultParams.calfLength,
           leftShoulderAngle: defaultParams.leftShoulderAngle,
           leftElbowAngle: defaultParams.leftElbowAngle,
           rightShoulderAngle: defaultParams.rightShoulderAngle,
