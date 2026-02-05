@@ -8,7 +8,7 @@ class DuudApp {
   private stickFigure: StickFigure;
   private animator: Animator;
   private animationFrameId: number | null = null;
-  private selectedAnimation: string = 'Punch';
+  private selectedAnimation: string = '';
 
   // Pose editor state
   private currentKeyframes: Keyframe[] = [];
@@ -44,11 +44,14 @@ class DuudApp {
       if (saved) {
         const savedAnimations: Animation[] = JSON.parse(saved);
         savedAnimations.forEach(anim => {
-          // Only add if not already in ANIMATIONS
           if (!ANIMATIONS.find(a => a.name === anim.name)) {
             ANIMATIONS.push(anim);
           }
         });
+      }
+      // Set initial selection to first animation if available
+      if (ANIMATIONS.length > 0) {
+        this.selectedAnimation = ANIMATIONS[0].name;
       }
     } catch (e) {
       console.error('Failed to load saved animations:', e);
@@ -73,6 +76,16 @@ class DuudApp {
   private populateAnimationDropdown(): void {
     const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
     animationSelect.innerHTML = '';
+
+    if (ANIMATIONS.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = '(No animations)';
+      option.disabled = true;
+      option.selected = true;
+      animationSelect.appendChild(option);
+      return;
+    }
 
     ANIMATIONS.forEach(anim => {
       const option = document.createElement('option');
@@ -138,6 +151,42 @@ class DuudApp {
     exportTsBtn.addEventListener('click', () => {
       this.exportToTypeScript();
     });
+
+    const deleteAnimationBtn = document.getElementById('deleteAnimationBtn') as HTMLButtonElement;
+    deleteAnimationBtn.addEventListener('click', () => {
+      this.deleteSelectedAnimation();
+    });
+  }
+
+  private deleteSelectedAnimation(): void {
+    if (!this.selectedAnimation) {
+      alert('No animation selected to delete.');
+      return;
+    }
+
+    if (!confirm(`Delete animation "${this.selectedAnimation}"?`)) {
+      return;
+    }
+
+    const index = ANIMATIONS.findIndex(a => a.name === this.selectedAnimation);
+    if (index >= 0) {
+      ANIMATIONS.splice(index, 1);
+      this.saveAnimationsToStorage();
+      this.populateAnimationDropdown();
+
+      // Select first remaining animation or clear selection
+      if (ANIMATIONS.length > 0) {
+        this.selectedAnimation = ANIMATIONS[0].name;
+        const animationSelect = document.getElementById('animationType') as HTMLSelectElement;
+        animationSelect.value = this.selectedAnimation;
+        this.loadSelectedAnimation();
+      } else {
+        this.selectedAnimation = '';
+        this.currentKeyframes = [];
+        this.currentAnimationName = 'My Animation';
+        this.updateKeyframeList();
+      }
+    }
   }
 
   private initializePoseEditor(): void {
@@ -203,11 +252,19 @@ class DuudApp {
   }
 
   private loadSelectedAnimation(): void {
+    if (!this.selectedAnimation) {
+      this.currentKeyframes = [];
+      this.currentAnimationName = 'My Animation';
+      this.selectedKeyframeTime = null;
+      this.updateKeyframeList();
+      return;
+    }
+
     const animation = getAnimationByName(this.selectedAnimation);
     if (animation) {
       this.currentAnimationName = animation.name;
       this.currentKeyframes = [...animation.keyframes];
-      this.selectedKeyframeTime = null; // Clear selection when loading new animation
+      this.selectedKeyframeTime = null;
       this.updateKeyframeList();
     }
   }
