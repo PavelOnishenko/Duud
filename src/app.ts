@@ -233,6 +233,32 @@ class DuudApp {
     saveAnimationBtn.addEventListener('click', () => this.saveAnimation());
   }
 
+  private normalizeKeyframes(
+    keyframes: Keyframe[],
+    fallbackParams: StickFigureParams
+  ): Keyframe[] {
+    const sorted = [...keyframes].sort((a, b) => a.time - b.time);
+    let lastX = fallbackParams.x;
+    let lastY = fallbackParams.y;
+
+    return sorted.map((keyframe) => {
+      const params = { ...keyframe.params };
+
+      if (typeof params.x !== 'number') {
+        params.x = lastX;
+      }
+
+      if (typeof params.y !== 'number') {
+        params.y = lastY;
+      }
+
+      lastX = params.x;
+      lastY = params.y;
+
+      return { ...keyframe, params };
+    });
+  }
+
   private updatePoseEditorFromStickFigure(): void {
     const params = this.stickFigure.getParams();
     const updates = [
@@ -271,7 +297,8 @@ class DuudApp {
     const animation = getAnimationByName(this.selectedAnimation);
     if (animation) {
       this.currentAnimationName = animation.name;
-      this.currentKeyframes = [...animation.keyframes];
+      const fallbackParams = this.stickFigure.getParams();
+      this.currentKeyframes = this.normalizeKeyframes(animation.keyframes, fallbackParams);
       this.selectedKeyframeTime = null;
       this.updateKeyframeList();
     }
