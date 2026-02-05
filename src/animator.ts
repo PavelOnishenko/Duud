@@ -48,8 +48,11 @@ export class Animator {
   stop(): void {
     this.isPlaying = false;
     this.currentTime = 0;
-    this.currentAnimation = null;
-    this.stickFigure.setParams(this.baseParams);
+    if (this.currentAnimation) {
+      this.updatePose();
+    } else {
+      this.stickFigure.setParams(this.baseParams);
+    }
   }
 
   reset(): void {
