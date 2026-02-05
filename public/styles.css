@@ -69,6 +69,11 @@ select {
   min-width: 120px;
 }
 
+#deleteAnimationBtn {
+  padding: 6px 8px;
+  min-width: auto;
+}
+
 input[type="color"] {
   width: 40px;
   height: 32px;
