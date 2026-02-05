@@ -6,8 +6,9 @@ DONE When we create new animation, the first keyframe should be added by default
 DONE Play button should resume playback from moment that was paused by pause button.
 DONE Checkbox for Looped to edit
 DONE Show ground level
-DONE Move entire body
-INPRO Resize bones
+DONE Resize bones
 DONE Edit keyframes
-INPRO Delete keyframes 
+DONE Delete keyframes 
+FIX Move entire body
 Importing to game
+Add visual indication of playback
