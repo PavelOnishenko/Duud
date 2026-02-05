@@ -9,6 +9,7 @@ class DuudApp {
   private animator: Animator;
   private animationFrameId: number | null = null;
   private selectedAnimation: string = '';
+  private readonly floorY: number = 400;
 
   // Pose editor state
   private currentKeyframes: Keyframe[] = [];
@@ -536,6 +537,14 @@ class DuudApp {
     // Clear canvas
     this.ctx.fillStyle = '#ffffff';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Draw floor reference line
+    this.ctx.strokeStyle = '#c7c7c7';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, this.floorY);
+    this.ctx.lineTo(this.canvas.width, this.floorY);
+    this.ctx.stroke();
 
     // Draw stick figure
     this.stickFigure.draw(this.ctx);
