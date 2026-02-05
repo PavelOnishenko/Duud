@@ -441,9 +441,24 @@ class DuudApp {
   }
 
   private playAnimation(): void {
-    const animation = getAnimationByName(this.selectedAnimation);
+    // First try to get a saved animation
+    let animation = getAnimationByName(this.selectedAnimation);
+
+    // If no saved animation but we have current keyframes, create a preview animation
+    if (!animation && this.currentKeyframes.length > 0) {
+      const duration = Math.max(...this.currentKeyframes.map(kf => kf.time));
+      animation = {
+        name: this.currentAnimationName,
+        duration,
+        keyframes: this.currentKeyframes,
+        loop: false
+      };
+    }
+
     if (animation) {
       this.animator.play(animation);
+    } else {
+      alert('Please add at least one keyframe to preview the animation.');
     }
   }
 
